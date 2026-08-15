@@ -1,0 +1,199 @@
+:root {
+  --font-heading: 'Syne', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+
+  /* Theme: Dark (Default) */
+  --bg-color: #070708;
+  --bg-gradient: radial-gradient(circle at 50% 50%, #111115 0%, #070708 100%);
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --primary-lime: #CCFF33;
+  --accent-cyan: #00e5ff;
+  --gradient-lime: linear-gradient(135deg, #CCFF33 0%, #39e5a1 100%);
+  --gradient-cyan: linear-gradient(135deg, #39e5a1 0%, #00e5ff 100%);
+  --nav-bg: rgba(15, 15, 18, 0.6);
+  --nav-border: rgba(255, 255, 255, 0.07);
+  --button-dark-bg: rgba(255, 255, 255, 0.04);
+  --button-dark-border: rgba(255, 255, 255, 0.08);
+  --button-dark-hover: rgba(255, 255, 255, 0.1);
+  --glow-1: rgba(204, 255, 51, 0.42);
+  --glow-2: rgba(0, 229, 255, 0.1);
+  --glow-3: rgba(239, 68, 68, 0.06);
+  --selection-bg: rgba(204, 255, 51, 0.2);
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  
+  /* Transition durations */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme='light'] {
+  /* Theme: Light */
+  --bg-color: #f8fafc;
+  --bg-gradient: radial-gradient(circle at 50% 50%, #ffffff 0%, #f8fafc 100%);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --primary-lime: #7da000;
+  --accent-cyan: #009ebc;
+  --gradient-lime: linear-gradient(135deg, #7da000 0%, #009c73 100%);
+  --gradient-cyan: linear-gradient(135deg, #009c73 0%, #009ebc 100%);
+  --nav-bg: rgba(255, 255, 255, 0.7);
+  --nav-border: rgba(15, 23, 42, 0.06);
+  --button-dark-bg: rgba(15, 23, 42, 0.03);
+  --button-dark-border: rgba(15, 23, 42, 0.06);
+  --button-dark-hover: rgba(15, 23, 42, 0.08);
+  --glow-1: rgba(125, 160, 0, 0.08);
+  --glow-2: rgba(0, 158, 188, 0.08);
+  --glow-3: rgba(239, 68, 68, 0.04);
+  --selection-bg: rgba(125, 160, 0, 0.15);
+  --shadow-color: rgba(15, 23, 42, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  transition: background-color var(--transition-normal), border-color var(--transition-normal), color var(--transition-normal);
+}
+
+::selection {
+  background: var(--selection-bg);
+  color: var(--text-primary);
+}
+
+html, body {
+  scroll-behavior: smooth;
+  width: 100%;
+  min-height: 100%;
+  background: var(--bg-color);
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Background Glow Effects */
+.ambient-glows {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.8;
+  mix-blend-mode: normal;
+}
+
+.glow-orb-1 {
+  top: -15%;
+  left: -20vw;
+  width: 45vw;
+  height: 55vw;
+  filter: blur(140px);
+  background: radial-gradient(circle, rgba(204, 255, 51, 0.20) 0%, rgba(204, 255, 51, 0.06) 50%, transparent 80%);
+  animation: drift-slow 22s infinite alternate ease-in-out;
+}
+
+.glow-orb-2 {
+  bottom: -15%;
+  right: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, var(--glow-2) 0%, transparent 70%);
+  animation: drift-medium 30s infinite alternate ease-in-out;
+}
+
+.glow-orb-3 {
+  bottom: 10%;
+  left: 20%;
+  width: 40vw;
+  height: 40vw;
+  background: radial-gradient(circle, var(--glow-3) 0%, transparent 70%);
+  animation: drift-fast 20s infinite alternate ease-in-out;
+}
+
+.glow-orb-4 {
+  top: 20%;
+  right: -25vw;
+  width: 55vw;
+  height: 55vw;
+  filter: blur(140px);
+  background: radial-gradient(circle, rgba(0, 140, 255, 0.25) 0%, rgba(0, 140, 255, 0.08) 50%, transparent 85%);
+  animation: drift-slow 28s infinite alternate ease-in-out;
+}
+
+@keyframes drift-slow {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(8%, 5%) scale(1.15);
+  }
+}
+
+@keyframes drift-medium {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(-10%, -6%) scale(1.1);
+  }
+}
+
+@keyframes drift-fast {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(5%, -10%) scale(1.2);
+  }
+}
+
+/* Main Layout Wrapper */
+#root {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Container Utility */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1.25rem;
+  }
+}

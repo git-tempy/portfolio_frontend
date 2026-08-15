@@ -1,0 +1,48 @@
+/* AboutCertificates.css – layout for combined About + Certificates section */
+
+/* AboutCertificates.css – unified vertical layout */
+
+.about-certificates-section {
+  padding: 8rem 0 6rem;
+  /* Use transparent background to show the body fixed gradient */
+  background: transparent;
+  position: relative;
+  z-index: 5;
+}
+
+/* Stack About and Certificates vertically */
+.about-certificates-wrapper {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+  align-items: stretch;
+}
+
+/* Ensure About component uses transparent background */
+.about-section {
+  background: transparent;
+  color: #fff; /* ensure text is readable */
+}
+
+/* Optional fade‑in animations for premium feel */
+.about-certificates-section .about-card,
+.about-certificates-section .certificates-wrapper {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: about-fade-in 0.9s forwards ease-out;
+}
+.about-certificates-section .about-card {
+  animation-delay: 0.2s;
+}
+.about-certificates-section .certificates-wrapper {
+  animation-delay: 0.4s;
+}
+
+@keyframes about-fade-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

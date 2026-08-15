@@ -1,0 +1,327 @@
+.skills-section {
+  position: relative;
+  padding: 80px 0 100px;
+  z-index: 10;
+  background: transparent;
+  color: #fff;
+}
+
+.skills-header {
+  margin-bottom: 2.5rem;
+}
+
+.skills-label {
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--primary-lime);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.skills-title {
+  font-family: var(--font-heading);
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+/* ── Sub-section heading ── */
+.skills-sub-heading {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 1.75rem;
+  letter-spacing: -0.01em;
+}
+
+.skills-sub-heading.personal-heading {
+  margin-top: 3.5rem;
+}
+
+/* ─── Software Skills Grid ─── */
+.skills-software-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.skill-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  padding: 2.25rem 1.2rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  cursor: default;
+  transition: all var(--transition-normal);
+}
+
+.skill-card:hover {
+  background: rgba(204, 255, 51, 0.06);
+  border-color: var(--primary-lime);
+  box-shadow: 0 0 25px rgba(204, 255, 51, 0.25);
+}
+
+.skill-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.skill-icon.figma       { background: linear-gradient(135deg, #9b59b6, #7c3aed); }
+.skill-icon.photoshop   { background: linear-gradient(135deg, #2ea7e5, #1565c0); }
+.skill-icon.illustrator { background: linear-gradient(135deg, #f5a623, #e8650a); }
+.skill-icon.coreldraw   { background: linear-gradient(135deg, #2ecc71, #16a34a); }
+.skill-icon.tilda       { background: linear-gradient(135deg, #f1c40f, #d97706); }
+.skill-icon.framer      { background: linear-gradient(135deg, #5e87f5, #4338ca); }
+
+.skill-name {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Personal Skills Pills Grid ─── */
+.skills-personal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.skill-pill {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 1.15rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  transition: all var(--transition-normal);
+  cursor: default;
+}
+
+.skill-pill:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--primary-lime);
+  transform: translateY(-3px);
+  box-shadow: 
+    0 12px 25px -10px rgba(0, 0, 0, 0.4),
+    0 0 15px -5px rgba(204, 255, 51, 0.15);
+}
+
+.skill-pill-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform var(--transition-normal);
+}
+
+.skill-pill:hover .skill-pill-icon {
+  transform: scale(1.08);
+}
+
+.pill-svg {
+  width: 18px;
+  height: 18px;
+}
+
+.skill-pill-icon.creativity   { background: rgba(204, 255, 51, 0.08); color: var(--primary-lime); }
+.skill-pill-icon.teamwork      { background: rgba(62, 152, 230, 0.08); color: #3e98e6; }
+.skill-pill-icon.strategic     { background: rgba(245, 130, 50, 0.08); color: #f58232; }
+.skill-pill-icon.detail        { background: rgba(162, 100, 240, 0.08); color: #a264f0; }
+
+.skill-pill-name {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+/* ─── Traits (Kuchli / Zaif) Grid ─── */
+.skills-traits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  margin-top: 3.5rem;
+}
+
+.traits-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.traits-title {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.traits-title.kuchli {
+  color: var(--primary-lime);
+}
+
+.traits-title.zaif {
+  color: #3e98e6;
+}
+
+.traits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.trait-pill {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 9999px;
+  padding: 0.95rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  transition: all var(--transition-normal);
+  cursor: default;
+}
+
+.trait-pill:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateX(6px);
+}
+
+.trait-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.trait-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.trait-icon.lightning {
+  color: #f1c40f;
+  filter: drop-shadow(0 0 4px rgba(241, 196, 15, 0.3));
+}
+
+.trait-icon.target {
+  color: #ff4d4d;
+  filter: drop-shadow(0 0 4px rgba(255, 77, 77, 0.3));
+}
+
+.trait-icon.sparkle {
+  color: #e2e8f0;
+}
+
+.trait-icon.clock,
+.trait-icon.globe {
+  color: #94a3b8;
+}
+
+.trait-text {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .skills-software-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .skills-personal-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .skills-section {
+    padding: 60px 0 80px;
+  }
+  .skills-title {
+    font-size: 2.5rem;
+  }
+  .skills-software-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem;
+  }
+  .skill-card {
+    padding: 1.5rem 0.85rem 1.25rem;
+    border-radius: 18px;
+  }
+  .skill-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+  }
+  .skills-personal-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .skill-pill {
+    padding: 0.85rem 1rem;
+    gap: 0.85rem;
+  }
+  .skills-sub-heading.personal-heading {
+    margin-top: 2.5rem;
+  }
+  .skills-traits-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-top: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .skills-title {
+    font-size: 2rem;
+  }
+  .skills-software-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  .skills-personal-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .skill-name {
+    font-size: 0.8rem;
+  }
+  .skill-pill-name {
+    font-size: 0.88rem;
+  }
+  .trait-pill {
+    padding: 0.8rem 1.25rem;
+  }
+}
+

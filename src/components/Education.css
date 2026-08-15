@@ -1,0 +1,223 @@
+.education-section {
+  position: relative;
+  padding: 80px 0 100px;
+  z-index: 10;
+  background: transparent;
+}
+
+/* Header */
+.education-header {
+  margin-bottom: 3rem;
+}
+
+.education-title {
+  font-family: var(--font-heading);
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+/* List container */
+.education-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+/* Pill / Accordion Card */
+.education-accordion-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 30px;
+  padding: 1.25rem 2rem;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  overflow: hidden;
+  z-index: 2;
+}
+
+.education-accordion-card:hover {
+  background: rgba(204, 255, 51, 0.04);
+  border-color: var(--primary-lime);
+  box-shadow: 0 8px 30px rgba(204, 255, 51, 0.08);
+}
+
+.education-accordion-card.expanded {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Accordion Header */
+.education-accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.education-left-block {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Logo Circle */
+.education-logo-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #000; /* As requested in the mockup (solid black circular image) */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: border-color var(--transition-normal);
+}
+
+.education-accordion-card:hover .education-logo-circle {
+  border-color: var(--primary-lime);
+}
+
+.education-circle-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.education-circle-fallback {
+  color: var(--primary-lime);
+}
+
+/* Name & Period Text */
+.education-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.education-name-bold {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.education-period-sub {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+/* Arrow Column */
+.education-arrow-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: color var(--transition-normal);
+}
+
+.education-accordion-card:hover .education-arrow-block {
+  color: var(--primary-lime);
+}
+
+.education-chevron-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.education-chevron-icon.rotated {
+  transform: rotate(180deg);
+  color: var(--primary-lime);
+}
+
+/* Accordion Body */
+.education-accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.education-accordion-body.show {
+  max-height: 500px; /* Large enough to fit any description content */
+}
+
+.education-body-inner {
+  padding-top: 1.25rem;
+  padding-left: 5.25rem; /* Aligns description text with name/period column */
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 1rem;
+}
+
+.education-description-text {
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .education-section {
+    padding: 60px 0 80px;
+  }
+  .education-title {
+    font-size: 2.5rem;
+  }
+  
+  .education-accordion-card {
+    padding: 1rem 1.25rem;
+    border-radius: 22px;
+  }
+  
+  .education-logo-circle {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .education-name-bold {
+    font-size: 1.1rem;
+  }
+
+  .education-left-block {
+    gap: 1rem;
+  }
+  
+  .education-body-inner {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .education-title {
+    font-size: 2rem;
+  }
+  .education-accordion-card {
+    padding: 0.9rem 1rem;
+    border-radius: 18px;
+  }
+  .education-logo-circle {
+    width: 42px;
+    height: 42px;
+  }
+  .education-name-bold {
+    font-size: 1rem;
+  }
+  .education-period-sub {
+    font-size: 0.85rem;
+  }
+}
+

@@ -1,0 +1,675 @@
+.certificates-section {
+  position: relative;
+  padding: 100px 0;
+  background: transparent;
+  z-index: 10;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 3.5rem;
+  text-align: left;
+  letter-spacing: -0.02em;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fade-up-title 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.2s;
+}
+
+.certs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+/* Card */
+.cert-card {
+  background: var(--nav-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--nav-border);
+  border-radius: 24px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: all var(--transition-normal);
+  box-shadow: 0 10px 40px -15px var(--shadow-color);
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.cert-card-1 {
+  animation: fade-up-card 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.3s;
+}
+
+.cert-card-2 {
+  animation: fade-up-card 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.5s;
+}
+
+.cert-card-3 {
+  animation: fade-up-card 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.7s;
+}
+
+.cert-card:hover {
+  background: rgba(204, 255, 51, 0.06);
+  border-color: var(--primary-lime);
+  box-shadow: 0 0 25px rgba(204, 255, 51, 0.25);
+}
+
+/* Structural CSS Placeholder Template */
+.cert-img-container {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.04) 100%);
+  aspect-ratio: 16 / 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cert-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.cert-card:hover .cert-img {
+  transform: scale(1.05);
+}
+
+.cert-placeholder {
+  position: relative;
+  width: calc(100% - 24px);
+  height: calc(100% - 24px);
+  border: 1px dashed rgba(204, 255, 51, 0.15);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.cert-placeholder-seal {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(204, 255, 51, 0.2) 0%, transparent 80%);
+  border: 1px dashed rgba(204, 255, 51, 0.4);
+}
+
+.cert-placeholder-badge {
+  color: var(--primary-lime);
+  opacity: 0.65;
+  filter: drop-shadow(0 0 8px rgba(204, 255, 51, 0.3));
+  transition: all var(--transition-normal);
+}
+
+.cert-card:hover .cert-placeholder-badge {
+  transform: scale(1.1) rotate(5deg);
+  opacity: 0.95;
+  filter: drop-shadow(0 0 15px rgba(204, 255, 51, 0.6));
+}
+
+.cert-placeholder-line-lg {
+  width: 70%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+}
+
+.cert-placeholder-line-md {
+  width: 50%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 2px;
+}
+
+.cert-placeholder-line-sm {
+  width: 30%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 2px;
+}
+
+/* Info */
+.cert-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.cert-info svg {
+  width: 20px;
+  height: 20px;
+  color: var(--primary-lime);
+}
+
+/* Actions */
+.cert-actions {
+  display: flex;
+  margin-top: auto;
+}
+
+.cert-btn-view {
+  background-color: var(--primary-lime);
+  color: #070708;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.85rem 1.75rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 15px -3px rgba(204, 255, 51, 0.35);
+  transition: all var(--transition-fast);
+}
+
+.cert-btn-view:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -3px rgba(204, 255, 51, 0.5);
+  filter: brightness(1.05);
+}
+
+.cert-btn-view:hover svg {
+  transform: translate(2px, -2px);
+}
+
+.cert-btn-view svg {
+  width: 14px;
+  height: 14px;
+  transition: transform var(--transition-fast);
+}
+
+@keyframes fade-up-card {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .certs-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+  .cert-card-3 {
+    grid-column: span 2;
+    max-width: 50%;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .certs-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .cert-card-3 {
+    grid-column: span 1;
+    max-width: 100%;
+  }
+  
+  .cert-card {
+    padding: 1.25rem;
+  }
+  
+  .section-title {
+    font-size: 2.25rem;
+    margin-bottom: 2.5rem;
+  }
+}
+
+/* PDF Modal Overlay */
+.pdf-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.25s ease-out;
+}
+
+/* PDF Modal Container */
+.pdf-modal-container {
+  width: 90vw;
+  height: 90vh;
+  max-width: 1100px;
+  background-color: #323639; /* Chrome PDF viewer background */
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* PDF Modal Toolbar */
+.pdf-modal-toolbar {
+  height: 56px;
+  background-color: #2b2e31; /* Chrome PDF toolbar color */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 100;
+  user-select: none;
+}
+
+.pdf-modal-fileinfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #e8eaed;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.pdf-icon {
+  color: #f43f5e; /* PDF Red icon color */
+  width: 20px;
+  height: 20px;
+}
+
+.pdf-filename {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.pdf-modal-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.zoom-btn {
+  background: transparent;
+  border: none;
+  color: #e8eaed;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.zoom-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.zoom-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.zoom-text {
+  color: #e8eaed;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: center;
+}
+
+.pdf-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pdf-action-btn {
+  background: transparent;
+  border: none;
+  color: #e8eaed;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.pdf-action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.pdf-action-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.close-btn:hover {
+  background-color: #ea4335;
+  color: #ffffff;
+}
+
+/* PDF Modal Canvas */
+.pdf-modal-canvas {
+  flex: 1;
+  overflow: auto;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  position: relative;
+  background-color: #323639; /* Grey backdrop */
+}
+
+/* Page Container (A4 aspect-ratio mockup) */
+.pdf-page-container {
+  background-color: #ffffff;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  width: 90%;
+  max-width: 800px;
+  height: auto;
+  max-height: calc(90vh - 120px);
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: transform 0.1s ease-out;
+  padding: 0;
+}
+
+.pdf-page-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-security-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  background: transparent;
+  user-select: none;
+  pointer-events: auto;
+  -webkit-user-drag: none;
+}
+
+.pdf-page-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* High Fidelity Ornate Certificate Mockup (Fallback when no image is loaded) */
+.pdf-page-fallback {
+  background: #fdfdfd;
+  color: #1e293b;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  aspect-ratio: 4 / 3;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  user-select: none;
+}
+
+.fallback-border-outer {
+  border: 4px solid #c5a059; /* Elegant gold hoshiya */
+  height: 100%;
+  width: 100%;
+  padding: 6px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.fallback-border-outer::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  border: 1px solid #c5a059;
+  pointer-events: none;
+}
+
+.fallback-border-inner {
+  height: 100%;
+  width: 100%;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 2px dashed rgba(197, 160, 89, 0.4);
+  background-color: #fbf9f4; /* Warm certificate cream background */
+  background-image: 
+    radial-gradient(circle at 50% 50%, #ffffff 40%, #faf6e9 100%),
+    repeating-linear-gradient(45deg, rgba(197, 160, 89, 0.015) 0px, rgba(197, 160, 89, 0.015) 2px, transparent 2px, transparent 10px);
+}
+
+.fallback-badge {
+  color: #c5a059;
+  width: 50px;
+  height: 50px;
+  margin-bottom: 0.75rem;
+  filter: drop-shadow(0 4px 8px rgba(197, 160, 89, 0.2));
+}
+
+.fallback-cert-type {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.fallback-presented {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.fallback-recipient {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 800;
+  color: #a37b34;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.fallback-line {
+  width: 50%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #c5a059 50%, transparent);
+  margin-bottom: 0.75rem;
+}
+
+.fallback-course-desc {
+  font-family: var(--font-body);
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.fallback-course-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.75rem;
+}
+
+.fallback-issuer {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #475569;
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.fallback-signatures {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.signature-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sig-line {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.sig-label {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Responsive adjustments for PDF modal */
+@media (max-width: 768px) {
+  .pdf-modal-container {
+    width: 95vw;
+    height: 95vh;
+  }
+  .pdf-modal-toolbar {
+    padding: 0 0.75rem;
+    height: 48px;
+  }
+  .pdf-filename {
+    max-width: 100px;
+    font-size: 0.8rem;
+  }
+  .pdf-modal-zoom-controls {
+    gap: 0.5rem;
+    padding: 0.15rem 0.5rem;
+  }
+  .zoom-text {
+    font-size: 0.75rem;
+    min-width: 30px;
+  }
+  .pdf-modal-canvas {
+    padding: 0.5rem;
+  }
+  .pdf-page-container {
+    width: 100%;
+    height: 100%;
+    max-height: calc(95vh - 64px);
+    aspect-ratio: unset;
+    background-color: transparent;
+    box-shadow: none;
+  }
+  .pdf-page-wrapper {
+    width: 100%;
+    height: 100%;
+  }
+  .pdf-page-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .pdf-page-fallback {
+    aspect-ratio: unset;
+    height: 100%;
+  }
+  .fallback-cert-type {
+    font-size: 1.1rem;
+  }
+  .fallback-recipient {
+    font-size: 1.3rem;
+  }
+  .fallback-course-title {
+    font-size: 0.95rem;
+  }
+}
+
+/* Decrease Navbar z-index when modal is active to prevent overlap */
+body.modal-open .navbar {
+  z-index: 1 !important;
+}
