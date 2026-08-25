@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import AboutCertificates from './components/AboutCertificates';
@@ -14,7 +14,11 @@ import ProjectDetailModal from './components/ProjectDetailModal';
 import './App.css';
 
 function App() {
-  const [language, setLanguage] = useState('UZ');
+  const [language, setLanguage] = useState(() => {
+    if (typeof window === 'undefined') return 'UZ';
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('lang') || localStorage.getItem('lang') || 'UZ';
+  });
   const [theme, setTheme] = useState('dark');
   const [currentView, setCurrentView] = useState('home');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -34,28 +38,18 @@ function App() {
     }).catch(() => {});
   };
 
-  // Initialise language from URL, localStorage or default
+  // Initialise language URL parameters & backend sync
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const urlLang = urlParams.get('lang');
-    const storedLang = localStorage.getItem('lang');
-    const initLang = urlLang || storedLang || 'UZ';
-    setLanguage(initLang);
-    // Persist to URL and localStorage
-    urlParams.set('lang', initLang);
+    urlParams.set('lang', language);
     window.history.replaceState(null, '', `${window.location.pathname}?${urlParams.toString()}`);
-    localStorage.setItem('lang', initLang);
-    syncLanguageToBackend(initLang);
-  }, []);
+    localStorage.setItem('lang', language);
+    syncLanguageToBackend(language);
+  }, [language]);
 
   // Wrapper to change language from UI
   const changeLanguage = (lang) => {
     setLanguage(lang);
-    const urlParams = new URLSearchParams(window.location.search);
-    urlParams.set('lang', lang);
-    window.history.replaceState(null, '', `${window.location.pathname}?${urlParams.toString()}`);
-    localStorage.setItem('lang', lang);
-    syncLanguageToBackend(lang);
   };
 
   const fetchAboutData = async () => {
@@ -86,6 +80,7 @@ function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', 'dark');
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAboutData();
     
     // Show welcome alert only for first-time visitors on public pages

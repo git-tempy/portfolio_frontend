@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, ZoomIn, ZoomOut, FileText, Download, Printer, User, Phone, Mail, FileQuestion } from 'lucide-react';
 import './ResumeModal.css';
 

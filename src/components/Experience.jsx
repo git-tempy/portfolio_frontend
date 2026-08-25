@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Briefcase } from 'lucide-react';
 import { locales } from '../locales';
 import './Experience.css';

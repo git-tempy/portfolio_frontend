@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Award, ExternalLink, X, ZoomIn, ZoomOut, Download, FileText } from 'lucide-react';
+import { useState, useEffect, memo } from 'react';
+import { Award, ExternalLink, X, ZoomIn, ZoomOut, FileText } from 'lucide-react';
 import { locales } from '../locales';
 import './Certificates.css';
 
@@ -214,4 +214,4 @@ const Certificates = ({ language }) => {
   );
 };
 
-export default React.memo(Certificates);
+export default memo(Certificates);

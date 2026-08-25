@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Sun, Moon, FileText, Menu, X } from 'lucide-react';
 import { locales } from '../locales';
 import './Navbar.css';

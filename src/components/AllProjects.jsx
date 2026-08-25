@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
-import { locales } from '../locales';
-import ProjectDetailModal from './ProjectDetailModal';
 import './AllProjects.css';
 
 export default function AllProjects({ language, initialSearch = '', onBack }) {
-  const t = locales[language]?.portfolio || locales['UZ'].portfolio;
 
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState('ALL');

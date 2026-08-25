@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  X, Menu, ChevronLeft, ChevronRight, RotateCw, 
-  PenTool, Undo, Redo, Printer, FileText
+  X, Menu, ChevronLeft, ChevronRight, FileText,
+  Cpu, ShieldAlert, Key, Send, TrendingUp, BarChart2
 } from 'lucide-react';
 import './ProjectDetailModal.css';
 
@@ -159,7 +159,7 @@ export default function ProjectDetailModal({ projectId, projectKey, onClose }) {
   const [dbProject, setDbProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [zoom, setZoom] = useState(85);
+  const [zoom, setZoom] = useState(() => (typeof window !== 'undefined' && window.innerWidth <= 768 ? 45 : 85));
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // 1. Fetch project from backend API if ID is passed
@@ -167,12 +167,9 @@ export default function ProjectDetailModal({ projectId, projectKey, onClose }) {
     // Body scroll lock
     document.body.classList.add('modal-open');
     document.body.style.overflow = 'hidden';
-    
-    if (window.innerWidth <= 768) {
-      setZoom(45);
-    }
 
     if (projectId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(true);
       fetch(`${window.API_BASE_URL}/api/portfolio/projects/${projectId}/`)
         .then(res => res.json())

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Send, Mail, CheckCircle2, AlertCircle } from 'lucide-react';
 import { locales } from '../locales';
 import './Contact.css';

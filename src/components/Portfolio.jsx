@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowRight, Eye } from 'lucide-react';
 import { locales } from '../locales';
-import ProjectDetailModal from './ProjectDetailModal';
 import './Portfolio.css';
 
 export default function Portfolio({ language, onViewAll }) {

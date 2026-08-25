@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Briefcase, 
@@ -292,11 +292,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
     text_jp: ''
   });
 
-  // Personal Skills states
-  const [personalSkills, setPersonalSkills] = useState([
-    "Brand Strategy", "Creative Thinking", "Team Leadership", "Project Management"
-  ]);
-  const [newPersonalSkillName, setNewPersonalSkillName] = useState('');
+
 
   // Strengths list states
   const [strengths, setStrengths] = useState([
@@ -383,6 +379,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
   useEffect(() => {
     if (dbAbout) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAboutData({
         name_uz: dbAbout.name_uz || dbAbout.name || '',
         name_ru: dbAbout.name_ru || '',

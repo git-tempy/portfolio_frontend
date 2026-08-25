@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { LogIn, Key, User, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { LogIn, Key, User, Eye, EyeOff, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import './AdminLogin.css';
 
 const localLocales = {
@@ -89,6 +89,7 @@ export default function AdminLogin({ language, onLoginSuccess, onBack }) {
         }
       }
     } catch (err) {
+      console.error('Login error:', err);
       setLoading(false);
       setError(language === 'UZ' ? 'Server bilan bog\'lanishda xatolik yuz berdi!' : 'Failed to connect to the server!');
       const loginCard = document.querySelector('.login-card');
@@ -202,6 +203,28 @@ export default function AdminLogin({ language, onLoginSuccess, onBack }) {
                 </>
               )}
             </button>
+
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                style={{
+                  marginTop: '0.75rem',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'rgba(255,255,255,0.6)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.85rem'
+                }}
+              >
+                <ArrowLeft size={16} />
+                <span>{t.backBtn}</span>
+              </button>
+            )}
           </form>
 
           {/* Secure Hint Info */}
