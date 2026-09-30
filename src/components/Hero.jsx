@@ -1,93 +1,18 @@
 import { ArrowRight } from 'lucide-react';
 import { locales } from '../locales';
-import './Hero.css';
-
-const Hero = ({ language }) => {
-  const t = locales[language];
-
-  // Helper to render headings dynamically with correct language-specific highlighting
-  const renderTitle = () => {
-    switch (language) {
-      case 'UZ':
-        return (
-          <h1 className="hero-title">
-            <span className="hero-title-line">{t.hero.titlePart1}</span>
-            <span className="hero-title-line">
-              raqamli <span className="highlight-lime">tajribalar</span>
-            </span>
-            <span className="hero-title-line">
-              <span className="highlight-cyan">{t.hero.titlePart3}</span>
-            </span>
-          </h1>
-        );
-      case 'ENG':
-        return (
-          <h1 className="hero-title">
-            <span className="hero-title-line">{t.hero.titlePart1}</span>
-            <span className="hero-title-line">
-              <span className="highlight-lime">digital</span> experiences
-            </span>
-            <span className="hero-title-line">
-              <span className="highlight-cyan">{t.hero.titlePart3}</span>
-            </span>
-          </h1>
-        );
-      case 'RU':
-        return (
-          <h1 className="hero-title">
-            <span className="hero-title-line">{t.hero.titlePart1}</span>
-            <span className="hero-title-line">
-              <span className="highlight-lime">цифровые</span> впечатления
-            </span>
-            <span className="hero-title-line">
-              <span className="highlight-cyan">{t.hero.titlePart3}</span>
-            </span>
-          </h1>
-        );
-      case 'JP':
-        return (
-          <h1 className="hero-title">
-            <span className="hero-title-line">{t.hero.titlePart1}</span>
-            <span className="hero-title-line">
-              <span className="highlight-lime">デジタル</span>体験を
-            </span>
-            <span className="hero-title-line">
-              <span className="highlight-cyan">{t.hero.titlePart3}</span>
-            </span>
-          </h1>
-        );
-      default:
-        return null;
-    }
+import Reveal from './Reveal';
+export default function Hero({ language }) {
+  const t = locales[language] || locales.ENG;
+  const title = {
+    ENG: <>I craft digital experiences <span className="hero-gradient">that leave a mark</span></>,
+    UZ: <>Iz qoldiradigan <span className="hero-gradient">raqamli tajribalar yarataman</span></>,
+    RU: <>Я создаю цифровые <span className="hero-gradient">впечатления, оставляющие след</span></>,
+    JP: <>心に残る <span className="hero-gradient">デジタル体験をつくります</span></>
   };
-
-  return (
-    <section id="home" className="hero-section">
-      <div className="container">
-        <div className="hero-content">
-          {/* Subtitle */}
-          <div className="hero-subtitle">{t.hero.subtitle}</div>
-
-          {/* Heading */}
-          {renderTitle()}
-
-          {/* Description */}
-          <p className="hero-description">{t.hero.description}</p>
-
-          {/* Buttons */}
-          <div className="hero-buttons">
-            <a href="#portfolio" className="btn-primary">
-              {t.hero.ctaPrimary}
-              <ArrowRight />
-            </a>
-            <a href="#contact" className="btn-secondary">
-              {t.hero.ctaSecondary}
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-export default Hero;
+  return <section id="home" className="hero-section"><div className="container">
+    <Reveal immediate duration={.6} as="p" className="hero-eyebrow">{t.hero.subtitle}</Reveal>
+    <Reveal immediate duration={.8} delay={.1} y={30} as="h1" className="hero-title">{title[language] || title.ENG}</Reveal>
+    <Reveal immediate duration={.7} delay={.3} as="p" className="hero-description">{t.hero.description}</Reveal>
+    <Reveal immediate duration={.7} delay={.45} className="hero-actions"><a className="button button-primary" href="#portfolio">{t.hero.ctaPrimary}<ArrowRight size={16}/></a><a className="button button-glass" href="#contact">{t.hero.ctaSecondary}</a></Reveal>
+  </div></section>;
+}

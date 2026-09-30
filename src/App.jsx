@@ -1,256 +1,63 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import AboutCertificates from './components/AboutCertificates';
-import Experience from './components/Experience';
-import Skills from './components/Skills';
+import { AboutSection, EducationSection, CertificatesSection, SkillsSection, ExperienceSection } from './components/ContentSections';
 import Portfolio from './components/Portfolio';
 import Contact from './components/Contact';
 import AllProjects from './components/AllProjects';
 import AdminLogin from './components/AdminLogin';
-import AdminDashboard from './components/AdminDashboard';
-import ResumeModal from './components/ResumeModal';
-import ProjectDetailModal from './components/ProjectDetailModal';
-import './App.css';
+import { useContent, navigate } from './lib/content';
+import { resolveLanguage } from './lib/language';
+import './public.css';
+import './reference.css';
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const ProjectDetailModal = lazy(() => import('./components/ProjectDetailModal'));
+const ResumeModal = lazy(() => import('./components/ResumeModal'));
 
-function App() {
-  const [language, setLanguage] = useState(() => {
-    if (typeof window === 'undefined') return 'UZ';
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('lang') || localStorage.getItem('lang') || 'UZ';
-  });
-  const [theme, setTheme] = useState('dark');
-  const [currentView, setCurrentView] = useState('home');
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [showResume, setShowResume] = useState(false);
-  const [initialSearchTerm, setInitialSearchTerm] = useState('');
-  const [selectedProjectSlug, setSelectedProjectSlug] = useState(null);
-  const [dbAbout, setDbAbout] = useState(null);
-  const [showWelcomeAlert, setShowWelcomeAlert] = useState(false);
-
-  // Helper to inform Django of the selected language
-  const syncLanguageToBackend = (lang) => {
-    fetch(window.API_BASE_URL + '/i18n/setlang/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `language=${lang.toLowerCase()}`,
-      credentials: 'include',
-    }).catch(() => {});
+const readSetting = (key, fallback) => { try { return localStorage.getItem(key)||fallback; } catch { return fallback; } };
+// Every fresh visit starts in the device language; manual choices last for this visit.
+const readLanguage = () => resolveLanguage({deviceLanguages:navigator.languages?.length?navigator.languages:[navigator.language]});
+export default function App() {
+  const [language,setLanguage]=useState(readLanguage);
+  const chooseLanguage = value => {
+    setLanguage(value);
+    const url=new URL(location.href);url.searchParams.set('lang',value);history.replaceState(history.state,'',url);
   };
+  const [theme,setTheme]=useState(()=>readSetting('theme','dark')==='light'?'light':'dark');
+  const [route,setRoute]=useState(()=>location.pathname);
+  const [search,setSearch]=useState('');
+  const [authenticated,setAuthenticated]=useState(false);
+  const [resume,setResume]=useState(false);
+  const about=useContent('/api/about/',language);
+  const isAdmin=route==='/desone_adminstration';
 
-  // Initialise language URL parameters & backend sync
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    urlParams.set('lang', language);
-    window.history.replaceState(null, '', `${window.location.pathname}?${urlParams.toString()}`);
-    localStorage.setItem('lang', language);
-    syncLanguageToBackend(language);
-  }, [language]);
+  const selected=route.startsWith('/portfolio/')?decodeURIComponent(route.slice(11)):null;
+  useEffect(()=>{
+    const change=()=>setRoute(location.pathname);
+    addEventListener('popstate',change);
+    return()=>removeEventListener('popstate',change);
+  },[]);
+  useEffect(()=>{
+    document.documentElement.dataset.theme=theme;
+    document.documentElement.lang={ENG:'en',UZ:'uz',RU:'ru',JP:'ja'}[language];
+    try {localStorage.setItem('theme',theme);} catch { /* Storage may be disabled. */ }
+  },[theme,language]);
+  useEffect(()=>{
+    const url=new URL(location.href);url.searchParams.set('lang',language);history.replaceState(history.state,'',url);
+  },[language,route]);
+  useEffect(()=>{
+    if(selected) return;
+    if(Number.isFinite(history.state?.scrollY)) requestAnimationFrame(()=>window.scrollTo(0,history.state.scrollY));
+    else if(location.hash) requestAnimationFrame(()=>document.getElementById(location.hash.slice(1))?.scrollIntoView());
+    else window.scrollTo(0,0);
+  },[route,selected]);
+  const closeProject=()=>history.state?.from ? history.back() : navigate('/portfolio?lang='+language);
+  return <>
 
-  // Wrapper to change language from UI
-  const changeLanguage = (lang) => {
-    setLanguage(lang);
-  };
-
-  const fetchAboutData = async () => {
-    try {
-      const response = await fetch(window.API_BASE_URL + '/api/about/');
-      if (response.ok) {
-        const data = await response.json();
-        setDbAbout(data);
-      }
-    } catch (err) {
-      console.error('Error fetching about me data from backend:', err);
-    }
-  };
-
-  const logVisitor = async () => {
-    try {
-      await fetch(window.API_BASE_URL + '/api/visitor/log/', { method: 'POST' });
-    } catch (err) {
-      console.error('Error logging visitor:', err);
-    }
-  };
-
-  const handleWelcomeClose = () => {
-    localStorage.setItem('desone_welcomed_v2', 'true');
-    logVisitor();
-    setShowWelcomeAlert(false);
-  };
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchAboutData();
-    
-    // Show welcome alert only for first-time visitors on public pages
-    const isAdminPage = window.location.pathname === '/desone_adminstration';
-    const hasBeenWelcomed = localStorage.getItem('desone_welcomed_v2');
-    if (!hasBeenWelcomed && !isAdminPage) {
-      setShowWelcomeAlert(true);
-    }
-  }, []);
-
-  // Listen to path changes for Admin panel and Portfolio routing
-  useEffect(() => {
-    const handleLocationChange = () => {
-      const path = window.location.pathname;
-      if (path === '/desone_adminstration') {
-        if (isAdminLoggedIn) {
-          setCurrentView('admin-dashboard');
-        } else {
-          setCurrentView('admin-login');
-        }
-      } else if (path.startsWith('/portfolio/')) {
-        const slug = path.split('/portfolio/')[1];
-        if (slug) {
-          setCurrentView('project-detail');
-          setSelectedProjectSlug(slug);
-        }
-      } else {
-        if (['admin-login', 'admin-dashboard', 'project-detail'].includes(currentView)) {
-          setCurrentView('home');
-        }
-      }
-    };
-
-    window.addEventListener('popstate', handleLocationChange);
-    handleLocationChange(); // Initial check on mount
-
-    return () => window.removeEventListener('popstate', handleLocationChange);
-  }, [isAdminLoggedIn, currentView]);
-
-  const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(nextTheme);
-    document.documentElement.setAttribute('data-theme', nextTheme);
-  };
-
-  const handleAdminLoginSuccess = () => {
-    setIsAdminLoggedIn(true);
-    setCurrentView('admin-dashboard');
-    window.history.pushState(null, '', '/desone_adminstration');
-  };
-
-  const handleAdminLogout = () => {
-    setIsAdminLoggedIn(false);
-    setCurrentView('home');
-    window.history.pushState(null, '', '/');
-  };
-
-  const handleAdminBack = () => {
-    setCurrentView('home');
-    window.history.pushState(null, '', '/');
-  };
-
-  const showPublicNavbar = currentView !== 'admin-login' && currentView !== 'admin-dashboard' && currentView !== 'project-detail';
-
-  return (
-    <>
-      {/* Dynamic Ambient Blur Orbs */}
-      {showPublicNavbar && (
-        <div className="ambient-glows">
-          <div className="glow-orb glow-orb-1"></div>
-          <div className="glow-orb glow-orb-4"></div>
-        </div>
-      )}
-
-      {/* Main Glassmorphic Navigation */}
-      {showPublicNavbar && (
-        <Navbar
-          language={language}
-          setLanguage={changeLanguage}
-          theme={theme}
-          toggleTheme={toggleTheme}
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-          onResumeClick={() => setShowResume(true)}
-        />
-      )}
-
-      {/* Main Pages */}
-      <main style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        {currentView === 'home' ? (
-          <>
-            <Hero language={language} />
-            <AboutCertificates language={language} dbAbout={dbAbout} />
-            <Skills language={language} />
-            <Experience language={language} />
-            <Portfolio
-              language={language}
-              onViewAll={(tag) => {
-                setInitialSearchTerm(tag || '');
-                setCurrentView('portfolio-all');
-              }}
-            />
-            <Contact language={language} />
-          </>
-        ) : currentView === 'portfolio-all' ? (
-          <AllProjects
-            language={language}
-            initialSearch={initialSearchTerm}
-            onBack={() => {
-              setInitialSearchTerm('');
-              setCurrentView('home');
-            }}
-          />
-        ) : currentView === 'admin-login' ? (
-          <AdminLogin
-            language={language}
-            onLoginSuccess={handleAdminLoginSuccess}
-            onBack={handleAdminBack}
-          />
-        ) : currentView === 'admin-dashboard' ? (
-          <AdminDashboard
-            language={language}
-            onLogout={handleAdminLogout}
-            dbAbout={dbAbout}
-            onAboutUpdate={fetchAboutData}
-          />
-        ) : currentView === 'project-detail' ? (
-          <ProjectDetailModal
-            projectId={selectedProjectSlug}
-            onClose={() => {
-              if (window.history.length > 1) {
-                window.history.back();
-              } else {
-                window.history.pushState(null, '', '/');
-                window.dispatchEvent(new Event('popstate'));
-              }
-            }}
-          />
-        ) : null}
-      </main>
-
-      {/* Interactive Resume PDF modal */}
-      {showResume && (
-        <ResumeModal
-          language={language}
-          onClose={() => setShowResume(false)}
-          resumeUrl={dbAbout?.resume_pdf}
-        />
-      )}
-
-      {/* Premium Welcome Alert Popup */}
-      {showWelcomeAlert && (
-        <div className="welcome-alert-overlay">
-          <div className="welcome-alert-card">
-            <div className="welcome-card-glow" />
-            <div className="welcome-logo-wrap">
-              <span className="welcome-logo-des">des</span><span className="welcome-logo-one">one</span>
-            </div>
-            <h2 className="welcome-title">Welcome to DesOne Portfolio</h2>
-            <p className="welcome-text">
-              Explore a showcase of premium digital design, visual identity, and art direction.
-            </p>
-            <button className="welcome-close-btn" onClick={handleWelcomeClose}>
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-    </>
-  );
+    {isAdmin&&<button className="admin-theme-toggle" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')}>{theme==='dark'?'Light mode':'Dark mode'}</button>}
+    <div className="ambient-glows" aria-hidden="true"><div className="glow-orb glow-lime"/><div className="glow-orb glow-blue"/><div className="glow-orb glow-amber"/></div>
+    {!isAdmin&&<Navbar view={route} language={language} setLanguage={chooseLanguage} theme={theme} toggleTheme={()=>setTheme(t=>t==='dark'?'light':'dark')} onResumeClick={()=>setResume(true)}/>}
+    {isAdmin?<Suspense fallback={<div className="page-loading" role="status">Loading…</div>}>{authenticated?<AdminDashboard language={language} onLogout={()=>{setAuthenticated(false);navigate('/');}} dbAbout={about.data} onAboutUpdate={about.retry}/>:<AdminLogin language={language} onLoginSuccess={()=>setAuthenticated(true)} onBack={()=>navigate('/')}/>}</Suspense>:<><main id="main-content">{(route==='/portfolio'||(selected&&history.state?.from?.startsWith('/portfolio?')))?<AllProjects key={search} language={language} initialSearch={search} onBack={()=>navigate('/?lang='+language)}/>:<><Hero language={language}/><AboutSection language={language} state={about}/><EducationSection language={language}/><CertificatesSection language={language}/><SkillsSection language={language}/><ExperienceSection language={language}/><Portfolio language={language} onViewAll={term=>{setSearch(term||'');navigate('/portfolio?lang='+language);}}/><Contact language={language}/></>}</main><footer className="site-footer container"><a className="brand" href="/"><span>des</span>one.</a><span>© {new Date().getFullYear()} DesOne</span><a href="#home">{language==='UZ'?'Yuqoriga':'Back to top'} ↑</a></footer></>}
+    <Suspense fallback={<div className="page-loading" role="status">Loading viewer…</div>}>{selected&&<ProjectDetailModal key={selected} projectId={selected} language={language} onClose={closeProject}/>} {resume&&<ResumeModal language={language} aboutState={about} onClose={()=>setResume(false)}/>}</Suspense>
+  </>;
 }
-
-export default App;

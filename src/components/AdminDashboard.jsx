@@ -28,6 +28,8 @@ import {
   Menu
 } from 'lucide-react';
 import './AdminDashboard.css';
+import ImageUpload from './ImageUpload';
+import './AdminRefresh.css';
 
 const localizedDashboard = {
   UZ: {
@@ -209,6 +211,10 @@ const localizedDashboard = {
 export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpdate }) {
   const t = localizedDashboard[language] || localizedDashboard['UZ'];
   const [activeTab, setActiveTab] = useState('overview');
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [savingProject, setSavingProject] = useState(false);
+  const [projectError, setProjectError] = useState('');
   const [portfolioSubmenuOpen, setPortfolioSubmenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [selectedResumeFile, setSelectedResumeFile] = useState(null);
@@ -228,7 +234,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
     title_en: '',
     title_jp: '',
     category: 'UX_UI',
-    type: 'pdf', // 'pdf' or 'image'
+    type: 'image', // 'pdf' or 'image'
     file: null,
     fileName: '',
     coverImage: null,
@@ -529,6 +535,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
   };
 
   const handleAddProject = () => {
+    setProjectError(''); setUploadingImages(false); setUploadingCover(false);
     setEditingProject(null);
     setProjectForm({
       title_uz: '',
@@ -536,7 +543,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
       title_en: '',
       title_jp: '',
       category: categories[0]?.name || 'UX_UI',
-      type: 'pdf',
+      type: 'image',
       file: null,
       fileName: '',
       coverImage: null,
@@ -553,6 +560,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
   };
 
   const handleEditProject = (proj) => {
+    setProjectError(''); setUploadingImages(false); setUploadingCover(false);
     setEditingProject(proj);
     setProjectForm({
       title_uz: proj.title_uz || proj.title || '',
@@ -591,7 +599,13 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
   const handleProjectSubmit = async (e) => {
     e.preventDefault();
+    if (uploadingImages || uploadingCover || savingProject) return;
     if (!projectForm.title_uz.trim()) return;
+    setProjectError('');
+    if (!editingProject && (!projectForm.coverImage || (projectForm.type === 'image' ? !projectForm.files?.length : !projectForm.file))) {
+      setProjectError(language === 'UZ' ? 'Muqova va loyiha fayllarini tanlang.' : 'Choose a cover and project files.'); return;
+    }
+    setSavingProject(true);
 
     const formData = new FormData();
     formData.append('title_uz', projectForm.title_uz.trim());
@@ -649,7 +663,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           title_en: '',
           title_jp: '',
           category: categories[0]?.name || 'UX_UI',
-          type: 'pdf',
+          type: 'image',
           file: null,
           fileName: '',
           coverImage: null,
@@ -669,12 +683,12 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           .catch(err => console.error('Error refreshing categories:', err));
       } else {
         const errData = await res.json();
-        alert('Loyiha qo\'shishda/tahrirlashda xatolik yuz berdi: ' + JSON.stringify(errData));
+        setProjectError('Could not save the project: ' + JSON.stringify(errData));
       }
     } catch (err) {
       console.error('Error creating project:', err);
-      alert('Tarmoq xatoligi: ' + err.message);
-    }
+      setProjectError(language === 'UZ' ? 'Saqlanmadi. Serverga ulanishni tekshiring.' : 'Not saved. Please check the server connection.');
+    } finally { setSavingProject(false); }
   };
 
   const handleAddJob = () => {
@@ -2351,13 +2365,15 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                 <div className="project-type-toggle-group">
                   <button 
                     type="button"
+                    disabled={!!editingProject || uploadingImages || uploadingCover}
                     className={`type-toggle-btn ${projectForm.type === 'pdf' ? 'active-type' : ''}`}
-                    onClick={() => setProjectForm({ ...projectForm, type: 'pdf', file: null, files: [], fileName: '' })}
+                    onClick={() => setProjectForm({ ...projectForm, type: 'image', file: null, files: [], fileName: '' })}
                   >
                     PDF Document
                   </button>
                   <button 
                     type="button"
+                    disabled={!!editingProject || uploadingImages || uploadingCover}
                     className={`type-toggle-btn ${projectForm.type === 'image' ? 'active-type' : ''}`}
                     onClick={() => setProjectForm({ ...projectForm, type: 'image', file: null, files: [], fileName: '' })}
                   >
@@ -2366,96 +2382,15 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                 </div>
               </div>
 
-              {/* Conditional Upload field */}
               <div className="editor-input-group upload-input-group">
-                <label>
-                  {projectForm.type === 'pdf' 
-                    ? (language === 'UZ' ? "PDF Fayli" : "PDF File")
-                    : (language === 'UZ' ? "Loyiha Rasmlari" : "Project Images")
-                  }
-                </label>
-                <div className="custom-file-upload-wrap">
-                  <input 
-                    type="file" 
-                    id="project-file-input"
-                    accept={projectForm.type === 'pdf' ? "application/pdf" : "image/*"}
-                    multiple={projectForm.type === 'image'}
-                    onChange={(e) => {
-                      if (projectForm.type === 'image') {
-                        const selectedFiles = Array.from(e.target.files);
-                        if (selectedFiles.length > 0) {
-                          setProjectForm({ 
-                            ...projectForm, 
-                            files: selectedFiles, 
-                            fileName: language === 'UZ' ? `${selectedFiles.length} ta rasm tanlandi` : `${selectedFiles.length} images selected`
-                          });
-                        }
-                      } else {
-                        const selectedFile = e.target.files[0];
-                        if (selectedFile) {
-                          setProjectForm({ 
-                            ...projectForm, 
-                            file: selectedFile, 
-                            fileName: selectedFile.name 
-                          });
-                        }
-                      }
-                    }}
-                    required={!editingProject}
-                    style={{ display: 'none' }}
-                  />
-                  <button 
-                    type="button" 
-                    className="custom-upload-trigger-btn"
-                    onClick={() => document.getElementById('project-file-input').click()}
-                  >
-                    <Upload size={16} />
-                    <span>
-                      {projectForm.fileName 
-                        ? projectForm.fileName 
-                        : (language === 'UZ' ? "Kompyuterdan yuklash" : "Upload from computer")
-                      }
-                    </span>
-                  </button>
-                </div>
+                <label>{projectForm.type === 'pdf' ? 'PDF document' : (language === 'UZ' ? 'Loyiha rasmlari' : 'Project images')}</label>
+                {projectForm.type === 'pdf' ? <input type="file" accept="application/pdf" onChange={e => { const file=e.target.files[0]; if(file && (file.type!=='application/pdf'||file.size>25*1024*1024)){setProjectError('Choose a PDF smaller than 25 MB.');e.target.value='';return;} setProjectError('');setProjectForm(p=>({...p,file:file||null,fileName:file?.name||''})); }} /> : editingProject ? <div className="existing-gallery-note"><p>{language === 'UZ' ? 'Mavjud galereyani almashtirish backend bosqichida qo‘shiladi. Hozir muqova va matnlarni tahrirlash mumkin.' : 'Replacing an existing gallery will be available after the backend update. You can edit the cover and project text now.'}</p><div className="existing-gallery-images">{editingProject.images?.map(image=><img key={image.id} src={image.image} alt="Current gallery image" loading="lazy"/>)}</div></div> : <ImageUpload key="gallery" value={projectForm.files||[]} language={language} onBusy={setUploadingImages} onChange={files=>setProjectForm(p=>({...p,files,fileName:files.length+' images'}))}/>}
               </div>
-
-              {/* Cover Image Upload field */}
               <div className="editor-input-group upload-input-group">
-                <label>{language === 'UZ' ? "Loyiha muqovasi (Cover Image)" : "Cover Image"}</label>
-                <div className="custom-file-upload-wrap">
-                  <input 
-                    type="file" 
-                    id="project-cover-input"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const selectedFile = e.target.files[0];
-                      if (selectedFile) {
-                        setProjectForm({ 
-                          ...projectForm, 
-                          coverImage: selectedFile, 
-                          coverImageName: selectedFile.name 
-                        });
-                      }
-                    }}
-                    required={!editingProject}
-                    style={{ display: 'none' }}
-                  />
-                  <button 
-                    type="button" 
-                    className="custom-upload-trigger-btn"
-                    onClick={() => document.getElementById('project-cover-input').click()}
-                  >
-                    <Upload size={16} />
-                    <span>
-                      {projectForm.coverImageName 
-                        ? projectForm.coverImageName 
-                        : (language === 'UZ' ? "Muqova rasmini tanlash" : "Choose cover image")
-                      }
-                    </span>
-                  </button>
-                </div>
+                <label>{language === 'UZ' ? 'Loyiha muqovasi' : 'Cover image'}</label>
+                <ImageUpload kind="cover" language={language} value={projectForm.coverImage?[projectForm.coverImage]:[]} existing={[editingProject?.cover_image]} onBusy={setUploadingCover} onChange={files=>setProjectForm(p=>({...p,coverImage:files[0]||null,coverImageName:files[0]?.name||''}))}/>
               </div>
+              {projectError && <p className="upload-error" role="alert">{projectError}</p>}
 
               {/* Description */}
               <div className="form-row-grid-2">
@@ -2536,7 +2471,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   title_en: '',
                   title_jp: '',
                   category: categories[0]?.name || 'UX_UI',
-                  type: 'pdf',
+                  type: 'image',
                   file: null,
                   fileName: '',
                   coverImage: null,
@@ -2551,8 +2486,8 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               }}>
                 {language === 'UZ' ? "Bekor qilish" : "Cancel"}
                 </button>
-                <button type="submit" className="submit-btn">
-                  {editingProject ? (language === 'UZ' ? "Saqlash" : "Save") : (language === 'UZ' ? "Qo'shish" : "Add")}
+                <button type="submit" className="submit-btn" disabled={uploadingImages || uploadingCover || savingProject}>
+                  {savingProject ? (language === 'UZ' ? 'Saqlanmoqda…' : 'Saving…') : editingProject ? (language === 'UZ' ? "Saqlash" : "Save") : (language === 'UZ' ? "Qo'shish" : "Add")}
                 </button>
               </div>
             </form>
