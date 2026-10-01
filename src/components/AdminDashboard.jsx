@@ -8,7 +8,6 @@ import {
   Plus, 
   Trash2, 
   Edit2, 
-  TrendingUp, 
   Eye, 
   CheckCircle2, 
   Search, 
@@ -1269,9 +1268,6 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     <span className="stat-label">{t.overview.totalViews}</span>
                     <h3 className="stat-value">{dashboardStats.total_views.toLocaleString()}</h3>
                   </div>
-                  <span className="stat-trend trend-up">
-                    <TrendingUp size={12} /> +12.4%
-                  </span>
                 </div>
 
                 <div className="stat-card">
