@@ -1,12 +1,13 @@
 const TOKEN_KEY = 'desone-admin-session';
-export const getAdminToken = () => sessionStorage.getItem(TOKEN_KEY);
-export const saveAdminToken = token => sessionStorage.setItem(TOKEN_KEY, token);
-export const clearAdminToken = () => sessionStorage.removeItem(TOKEN_KEY);
+let memoryToken=null;
+export const getAdminToken = () => {try{return sessionStorage.getItem(TOKEN_KEY)||memoryToken;}catch{return memoryToken;}};
+export const saveAdminToken = token => {memoryToken=token;try{sessionStorage.setItem(TOKEN_KEY,token);}catch{/* Restricted browser storage. */}};
+export const clearAdminToken = () => {memoryToken=null;try{sessionStorage.removeItem(TOKEN_KEY);}catch{/* Restricted browser storage. */}};
 
 async function prepareForm(form, headers) {
   const data = {};
   for (const [name, value] of form.entries()) {
-    let prepared = value;
+    let prepared = name === 'keep_image_ids' ? JSON.parse(value) : value;
     if (value instanceof File) {
       if (!value.size) continue;
       const response = await fetch(window.API_BASE_URL + '/api/uploads/presign/', {
@@ -37,13 +38,18 @@ export async function adminFetch(url, options = {}) {
     body = await prepareForm(body, headers);
     headers.set('Content-Type', 'application/json');
   }
-  const response = await fetch(url, { ...options, body, headers });
+  let response;
+  try {response=await fetch(url,{...options,body,headers});}
+  catch(error){window.dispatchEvent(new CustomEvent('admin-request-error',{detail:error.message}));throw error;}
   if (response.status === 401) {
     clearAdminToken();
     window.location.reload();
   }
-  if (!response.ok && (!options.method || options.method === 'GET')) {
-    throw new Error(`Admin request failed (${response.status}).`);
+  if (!response.ok) {
+    const data = await response.clone().json().catch(()=>({}));
+    const message = data.error || data.detail || Object.entries(data).map(([key,value])=>key+': '+(Array.isArray(value)?value.join(' '):String(value))).join(' · ') || `Request failed (${response.status})`;
+    window.dispatchEvent(new CustomEvent('admin-request-error',{detail:message}));
+    if (!options.method || options.method==='GET') throw new Error(message);
   }
   return response;
 }

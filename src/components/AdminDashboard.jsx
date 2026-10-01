@@ -10,7 +10,6 @@ import {
   Edit2, 
   Eye, 
   CheckCircle2, 
-  Search, 
   Bell, 
   Sliders,
   Award,
@@ -24,12 +23,14 @@ import {
   Folder,
   FileText,
   GraduationCap,
-  Menu
+  Menu, Sun, Moon, X
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { adminFetch } from '../lib/adminApi';
 import ImageUpload from './ImageUpload';
 import './AdminRefresh.css';
+import AdminDialog from './AdminDialog';
+import { dashboardText, adminText } from '../lib/adminTranslations';
 
 const localizedDashboard = {
   UZ: {
@@ -208,15 +209,36 @@ const localizedDashboard = {
   }
 };
 
-export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpdate }) {
-  const t = localizedDashboard[language] || localizedDashboard['UZ'];
+export default function AdminDashboard({ language, setLanguage, theme, toggleTheme, onLogout, dbAbout, onAboutUpdate }) {
+  const t = dashboardText(localizedDashboard, language);
+  const tr = (uzbek,english) => adminText(language,uzbek,english);
   const [activeTab, setActiveTab] = useState('overview');
+  const [requestError, setRequestError] = useState('');
+  useEffect(()=>{const error=event=>setRequestError(event.detail);window.addEventListener('admin-request-error',error);return()=>window.removeEventListener('admin-request-error',error);},[]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [savingProject, setSavingProject] = useState(false);
   const [projectError, setProjectError] = useState('');
   const [portfolioSubmenuOpen, setPortfolioSubmenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  useEffect(()=>{
+    if (!mobileSidebarOpen) return;
+    const sidebar=document.getElementById('admin-navigation');
+    const previous=document.activeElement;
+    const oldOverflow=document.body.style.overflow;
+    document.body.style.overflow='hidden';
+    sidebar.querySelector('button')?.focus();
+    const keydown=event=>{
+      if(event.key==='Escape'){event.preventDefault();setMobileSidebarOpen(false);}
+      if(event.key==='Tab'){
+        const items=[...sidebar.querySelectorAll('button')].filter(item=>!item.disabled&&item.getClientRects().length);
+        if(event.shiftKey&&document.activeElement===items[0]){event.preventDefault();items.at(-1)?.focus();}
+        else if(!event.shiftKey&&document.activeElement===items.at(-1)){event.preventDefault();items[0]?.focus();}
+      }
+    };
+    document.addEventListener('keydown',keydown);
+    return()=>{document.removeEventListener('keydown',keydown);document.body.style.overflow=oldOverflow;previous?.focus();};
+  },[mobileSidebarOpen]);
   const [selectedResumeFile, setSelectedResumeFile] = useState(null);
   const [isUploadingResume, setIsUploadingResume] = useState(false);
 
@@ -256,7 +278,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
     coverImage: null,
     coverImageName: '',
     pdfFile: null,
-    pdfFileName: ''
+    pdfFileName: '', organization: '', year: ''
   });
 
   // Professional Skills states
@@ -448,17 +470,17 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
       });
       
       if (res.ok) {
-        alert(language === 'UZ' ? 'Rezyume muvaffaqiyatli yuklandi!' : 'Resume uploaded successfully!');
+        alert(tr("Rezyume muvaffaqiyatli yuklandi!","Resume uploaded successfully!"));
         setSelectedResumeFile(null);
         if (onAboutUpdate) {
           onAboutUpdate();
         }
       } else {
-        alert(language === 'UZ' ? 'Yuklashda xatolik yuz berdi.' : 'Failed to upload resume.');
+        alert(tr("Yuklashda xatolik yuz berdi.","Failed to upload resume."));
       }
     } catch (err) {
       console.error(err);
-      alert(language === 'UZ' ? 'Tarmoq xatoligi yuz berdi.' : 'Network error occurred.');
+      alert(tr("Tarmoq xatoligi yuz berdi.","Network error occurred."));
     } finally {
       setIsUploadingResume(false);
     }
@@ -515,7 +537,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
       title_ru: '',
       title_en: '',
       title_jp: '',
-      category: categories[0]?.name || 'UX_UI',
+      category: categories[0]?.id || '',
       type: 'image',
       file: null,
       fileName: '',
@@ -540,7 +562,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
       title_ru: proj.title_ru || '',
       title_en: proj.title_en || '',
       title_jp: proj.title_jp || '',
-      category: proj.category || 'UX_UI',
+      category: proj.category_id || categories.find(category=>category.name===proj.category)?.id || '',
       type: proj.type || 'pdf',
       file: null,
       fileName: proj.file ? proj.file.split('/').pop() : '',
@@ -552,7 +574,8 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
       description_jp: proj.description_jp || '',
       mainHashtag: proj.main_hashtag || '',
       regularHashtags: proj.regular_hashtags || '',
-      files: []
+      files: [],
+      keptImages: proj.images || []
     });
     setShowProjectModal(true);
   };
@@ -576,7 +599,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
     if (!projectForm.title_uz.trim()) return;
     setProjectError('');
     if (!editingProject && (!projectForm.coverImage || (projectForm.type === 'image' ? !projectForm.files?.length : !projectForm.file))) {
-      setProjectError(language === 'UZ' ? 'Muqova va loyiha fayllarini tanlang.' : 'Choose a cover and project files.'); return;
+      setProjectError(tr("Muqova va loyiha fayllarini tanlang.","Choose a cover and project files.")); return;
     }
     setSavingProject(true);
 
@@ -588,6 +611,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
     formData.append('title', projectForm.title_uz.trim());
     formData.append('category', projectForm.category);
     formData.append('type', projectForm.type);
+    if (editingProject && projectForm.type === 'image') formData.append('keep_image_ids', JSON.stringify((projectForm.keptImages||[]).map(image=>image.id)));
     formData.append('description_uz', projectForm.description_uz);
     formData.append('description_ru', projectForm.description_ru);
     formData.append('description_en', projectForm.description_en);
@@ -635,7 +659,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           title_ru: '',
           title_en: '',
           title_jp: '',
-          category: categories[0]?.name || 'UX_UI',
+          category: categories[0]?.id || '',
           type: 'image',
           file: null,
           fileName: '',
@@ -660,7 +684,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
       }
     } catch (err) {
       console.error('Error creating project:', err);
-      setProjectError(language === 'UZ' ? 'Saqlanmadi. Serverga ulanishni tekshiring.' : 'Not saved. Please check the server connection.');
+      setProjectError(tr("Saqlanmadi. Serverga ulanishni tekshiring.","Not saved. Please check the server connection."));
     } finally { setSavingProject(false); }
   };
 
@@ -876,7 +900,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
       coverImage: null,
       coverImageName: '',
       pdfFile: null,
-      pdfFileName: ''
+      pdfFileName: '', organization: '', year: ''
     });
     setShowCertModal(true);
   };
@@ -1001,7 +1025,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
       coverImage: null,
       coverImageName: cert.image ? cert.image.split('/').pop() : '',
       pdfFile: null,
-      pdfFileName: cert.file ? cert.file.split('/').pop() : ''
+      pdfFileName: cert.file ? cert.file.split('/').pop() : '', organization: cert.organization || '', year: cert.year || ''
     });
     setShowCertModal(true);
   };
@@ -1016,6 +1040,8 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
     formData.append('title_en', certForm.title_en.trim());
     formData.append('title_jp', certForm.title_jp.trim());
     formData.append('title', certForm.title_uz.trim());
+              formData.append('organization', certForm.organization || '');
+              formData.append('year', certForm.year || '');
     formData.append('organization', '');
     formData.append('year', new Date().getFullYear().toString());
     if (certForm.pdfFile) {
@@ -1055,7 +1081,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           coverImage: null,
           coverImageName: '',
           pdfFile: null,
-          pdfFileName: ''
+          pdfFileName: '', organization: '', year: ''
         });
       } else {
         console.error('Failed to submit certificate');
@@ -1087,7 +1113,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
       {mobileSidebarOpen && (
         <div className="mobile-sidebar-overlay show" onClick={() => setMobileSidebarOpen(false)} />
       )}
-      <aside className={`admin-sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
+      <aside id="admin-navigation" className={`admin-sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
           <span className="brand-des">des</span>
           <span className="brand-one">one</span>
@@ -1098,7 +1124,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           {/* 1. Dashboard Link */}
           <button 
             className={`sidebar-link ${activeTab === 'overview' ? 'active-link' : ''}`}
-            onClick={() => setActiveTab('overview')}
+            onClick={() => { setMobileSidebarOpen(false); setActiveTab('overview'); }}
           >
             <LayoutDashboard size={18} />
             <span>{t.sidebar.dashboard}</span>
@@ -1121,7 +1147,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
             <div className={`sidebar-submenu-drawer ${portfolioSubmenuOpen ? 'submenu-expanded' : ''}`}>
               <button 
                 className={`sidebar-sublink ${activeTab === 'portfolio-categories' ? 'active-sublink' : ''}`}
-                onClick={() => setActiveTab('portfolio-categories')}
+                onClick={() => { setMobileSidebarOpen(false); setActiveTab('portfolio-categories'); }}
               >
                 <Layers size={14} />
                 <span>{t.sidebar.subCategory}</span>
@@ -1129,7 +1155,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               
               <button 
                 className={`sidebar-sublink ${activeTab === 'portfolio-projects' ? 'active-sublink' : ''}`}
-                onClick={() => setActiveTab('portfolio-projects')}
+                onClick={() => { setMobileSidebarOpen(false); setActiveTab('portfolio-projects'); }}
               >
                 <Folder size={14} />
                 <span>{t.sidebar.subProjects}</span>
@@ -1140,7 +1166,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           {/* 3. MEN HAQIMDA Link */}
           <button 
             className={`sidebar-link ${activeTab === 'about' ? 'active-link' : ''}`}
-            onClick={() => setActiveTab('about')}
+            onClick={() => { setMobileSidebarOpen(false); setActiveTab('about'); }}
           >
             <User size={18} />
             <span>{t.sidebar.about}</span>
@@ -1149,7 +1175,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           {/* 3.1. Ta'lim Link */}
           <button 
             className={`sidebar-link ${activeTab === 'education' ? 'active-link' : ''}`}
-            onClick={() => setActiveTab('education')}
+            onClick={() => { setMobileSidebarOpen(false); setActiveTab('education'); }}
           >
             <GraduationCap size={18} />
             <span>{t.sidebar.education}</span>
@@ -1158,7 +1184,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           {/* 4. Sertifikatlar Link */}
           <button 
             className={`sidebar-link ${activeTab === 'certificates' ? 'active-link' : ''}`}
-            onClick={() => setActiveTab('certificates')}
+            onClick={() => { setMobileSidebarOpen(false); setActiveTab('certificates'); }}
           >
             <Award size={18} />
             <span>{t.sidebar.certificates}</span>
@@ -1167,7 +1193,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           {/* 5. Ko'nikmalar Link */}
           <button 
             className={`sidebar-link ${activeTab === 'skills' ? 'active-link' : ''}`}
-            onClick={() => setActiveTab('skills')}
+            onClick={() => { setMobileSidebarOpen(false); setActiveTab('skills'); }}
           >
             <Cpu size={18} />
             <span>{t.sidebar.skills}</span>
@@ -1176,7 +1202,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           {/* 6. Ish tajribasi Link */}
           <button 
             className={`sidebar-link ${activeTab === 'experience' ? 'active-link' : ''}`}
-            onClick={() => setActiveTab('experience')}
+            onClick={() => { setMobileSidebarOpen(false); setActiveTab('experience'); }}
           >
             <History size={18} />
             <span>{t.sidebar.experience}</span>
@@ -1185,7 +1211,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           {/* 7. Rezyume yuklanishlar Link */}
           <button 
             className={`sidebar-link ${activeTab === 'resume-downloads' ? 'active-link' : ''}`}
-            onClick={() => setActiveTab('resume-downloads')}
+            onClick={() => { setMobileSidebarOpen(false); setActiveTab('resume-downloads'); }}
           >
             <Download size={18} />
             {downloads.length > 0 && (
@@ -1197,7 +1223,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
           {/* 8. Murojaatlar Link */}
           <button 
             className={`sidebar-link ${activeTab === 'messages' ? 'active-link' : ''}`}
-            onClick={() => setActiveTab('messages')}
+            onClick={() => { setMobileSidebarOpen(false); setActiveTab('messages'); }}
           >
             <MessageSquare size={18} />
             {messages.filter(m => m.status === 'new').length > 0 && (
@@ -1223,34 +1249,29 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
         <header className="workspace-header">
           <div className="workspace-title-section">
             <h1>{t.title}</h1>
-            <span className="breadcrumbs">Root &gt; {activeTab}</span>
+            <span className="breadcrumbs">{t.sidebar[({overview:"dashboard","portfolio-categories":"subCategory","portfolio-projects":"subProjects","resume-downloads":"resumeDownloads"})[activeTab] || activeTab]}</span>
           </div>
 
           <button 
-            className="mobile-hamburger-btn"
+            className="mobile-hamburger-btn" aria-label={mobileSidebarOpen ? tr("Menyuni yopish","Close navigation") : tr("Menyuni ochish","Open navigation")} aria-expanded={mobileSidebarOpen} aria-controls="admin-navigation"
             style={{ display: 'none', background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '0.5rem' }}
             onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           >
-            <Menu size={22} />
+            {mobileSidebarOpen ? <X size={22}/> : <Menu size={22}/> }
           </button>
 
           <div className="workspace-header-actions">
-            <div className="header-search-bar">
-              <Search size={16} />
-              <input type="text" placeholder="Qidiruv..." disabled />
-            </div>
-
-            <button className="header-action-btn notification-bell" title="Notifications">
-              <Bell size={18} />
-              <span className="bell-dot"></span>
-            </button>
+            <select className="admin-language-select" aria-label={tr("Interfeys tili","Interface language")} value={language} onChange={e=>setLanguage(e.target.value)}>{['UZ','ENG','RU','JP'].map(code=><option key={code} value={code}>{code}</option>)}</select>
+            <button className="header-action-btn" aria-label={theme==='dark'?tr('Yorug‘ rejim','Light mode'):tr('Qorong‘i rejim','Dark mode')} onClick={toggleTheme}>{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>}</button>
+            <button className="header-action-btn notification-bell" aria-label={t.sidebar.messages} onClick={()=>setActiveTab('messages')}><Bell size={18}/>{messages.some(message=>message.status==='new')&&<span className="bell-dot"/>}</button>
 
             <div className="admin-profile-badge">
               <div className="admin-avatar">A</div>
-              <span className="admin-name">Administrator</span>
+              <span className="admin-name">{tr("Administrator","Administrator")}</span>
             </div>
           </div>
         </header>
+        {requestError && <div className="admin-error-banner" role="alert"><span>{requestError}</span><button type="button" aria-label={tr("Xatoni yopish","Dismiss error")} onClick={()=>setRequestError('')}><X size={18}/></button></div>}
 
         {/* Dynamic Panel Content */}
         <div className="workspace-content">
@@ -1278,7 +1299,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     <span className="stat-label">{t.overview.totalProjects}</span>
                     <h3 className="stat-value">{dashboardStats.total_projects}</h3>
                   </div>
-                  <span className="stat-trend trend-static">Active</span>
+                  <span className="stat-trend trend-static">{tr("Faol","Active")}</span>
                 </div>
 
                 <div className="stat-card">
@@ -1302,7 +1323,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     <span className="stat-label">{t.overview.skillsConfig}</span>
                     <h3 className="stat-value">{dashboardStats.total_skills}</h3>
                   </div>
-                  <span className="stat-trend trend-static">Verified</span>
+                  <span className="stat-trend trend-static">{tr("Sozlangan","Verified")}</span>
                 </div>
               </div>
 
@@ -1311,7 +1332,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                 {/* Analytics Mockup Chart */}
                 <div className="dashboard-analytics-box glass-panel">
                   <div className="panel-header-with-action">
-                    <h3>Visitor Analytics (Past 7 Days)</h3>
+                    <h3>{tr("Oxirgi 7 kun tashriflari","Visitor Analytics (Past 7 Days)")}</h3>
                     <Sliders size={14} className="panel-icon-btn" />
                   </div>
                   <div className="mock-chart-visual">
@@ -1360,7 +1381,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                       <li>
                         <div className="activity-dot dot-lime"></div>
                         <div className="activity-info">
-                          <p>Hozircha harakatlar mavjud emas</p>
+                          <p>{tr("Hozircha harakatlar mavjud emas","No activity yet")}</p>
                           <span className="activity-time">-</span>
                         </div>
                       </li>
@@ -1490,7 +1511,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               <form onSubmit={handleAboutSubmit} className="dashboard-form-editor">
                 {/* 1. Profile Image Upload */}
                 <div className="editor-input-group upload-input-group">
-                  <label>{language === 'UZ' ? "Profil rasmi" : "Profile Image"}</label>
+                  <label>{tr("Profil rasmi","Profile Image")}</label>
                   <div className="custom-file-upload-wrap">
                     <input 
                       type="file" 
@@ -1517,7 +1538,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                       <span>
                         {aboutData.imageName 
                           ? aboutData.imageName 
-                          : (language === 'UZ' ? "Profil rasmini tanlash" : "Choose profile image")
+                          : (tr("Profil rasmini tanlash","Choose profile image"))
                         }
                       </span>
                     </button>
@@ -1527,7 +1548,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                 {/* 2. Full Name */}
                 <div className="form-row-grid-2">
                   <div className="editor-input-group">
-                    <label>Uz Ism va Familya</label>
+                    <label>UZ {tr("Ism va Familya","Full Name")}</label>
                     <input 
                       type="text" 
                       value={aboutData.name_uz || ''}
@@ -1536,7 +1557,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     />
                   </div>
                   <div className="editor-input-group">
-                    <label>Ru Ism va Familya</label>
+                    <label>RU {tr("Ism va Familya","Full Name")}</label>
                     <input 
                       type="text" 
                       value={aboutData.name_ru || ''}
@@ -1547,7 +1568,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
                 <div className="form-row-grid-2">
                   <div className="editor-input-group">
-                    <label>Eng Ism va Familya</label>
+                    <label>ENG {tr("Ism va Familya","Full Name")}</label>
                     <input 
                       type="text" 
                       value={aboutData.name_en || ''}
@@ -1555,7 +1576,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     />
                   </div>
                   <div className="editor-input-group">
-                    <label>Jp Ism va Familya</label>
+                    <label>JP {tr("Ism va Familya","Full Name")}</label>
                     <input 
                       type="text" 
                       value={aboutData.name_jp || ''}
@@ -1567,7 +1588,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                 {/* 3. Biography */}
                 <div className="form-row-grid-2">
                   <div className="editor-input-group">
-                    <label>Uz Tarjimai hol (Bio)</label>
+                    <label>UZ {tr("Tarjimai hol (Bio)","Biography (Bio)")}</label>
                     <textarea 
                       rows={4}
                       value={aboutData.bio_uz || ''}
@@ -1576,7 +1597,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     />
                   </div>
                   <div className="editor-input-group">
-                    <label>Ru Tarjimai hol (Bio)</label>
+                    <label>RU {tr("Tarjimai hol (Bio)","Biography (Bio)")}</label>
                     <textarea 
                       rows={4}
                       value={aboutData.bio_ru || ''}
@@ -1587,7 +1608,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
                 <div className="form-row-grid-2">
                   <div className="editor-input-group">
-                    <label>Eng Tarjimai hol (Bio)</label>
+                    <label>ENG {tr("Tarjimai hol (Bio)","Biography (Bio)")}</label>
                     <textarea 
                       rows={4}
                       value={aboutData.bio_en || ''}
@@ -1595,7 +1616,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     />
                   </div>
                   <div className="editor-input-group">
-                    <label>Jp Tarjimai hol (Bio)</label>
+                    <label>JP {tr("Tarjimai hol (Bio)","Biography (Bio)")}</label>
                     <textarea 
                       rows={4}
                       value={aboutData.bio_jp || ''}
@@ -1729,13 +1750,13 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
             <div className="skills-tab-content glass-panel">
               {/* Header toolbar for software skills */}
               <div className="panel-toolbar-header">
-                <h3>{language === 'UZ' ? "Kasbiy ko'nikmalar (Software Skills)" : "Professional Software Skills"}</h3>
+                <h3>{tr("Kasbiy ko'nikmalar (Software Skills)","Professional Software Skills")}</h3>
                 <button className="add-item-btn" onClick={() => {
                   setSkillForm({ name: '', level: 90, image: null, imageName: '' });
                   setShowSkillModal(true);
                 }}>
                   <Plus size={16} />
-                  <span>{language === 'UZ' ? "Yangi ko'nikma" : "New Skill"}</span>
+                  <span>{tr("Yangi ko'nikma","New Skill")}</span>
                 </button>
               </div>
 
@@ -1783,7 +1804,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               
               <div className="personal-skills-management-box">
                 <div className="panel-toolbar-header">
-                  <h3>{language === 'UZ' ? "Shaxsiy ko'nikmalar" : "Personal Skills"}</h3>
+                  <h3>{tr("Shaxsiy ko'nikmalar","Personal Skills")}</h3>
                   <button 
                     type="button" 
                     className="add-item-btn"
@@ -1798,7 +1819,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     }}
                   >
                     <Plus size={16} />
-                    <span>{language === 'UZ' ? "Ko'nikma qo'shish" : "Add Skill"}</span>
+                    <span>{tr("Ko'nikma qo'shish","Add Skill")}</span>
                   </button>
                 </div>
 
@@ -1836,7 +1857,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                 {/* Kuchli tomonlar (Strengths) */}
                 <div className="strengths-box glass-panel-inner">
                   <div className="panel-toolbar-header-inline">
-                    <h3>{language === 'UZ' ? "Kuchli tomonlar" : "Strengths"}</h3>
+                    <h3>{tr("Kuchli tomonlar","Strengths")}</h3>
                     <button 
                       type="button" 
                       className="add-bullet-btn" 
@@ -1892,7 +1913,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                 {/* Zaif tomonlar (Weaknesses) */}
                 <div className="weaknesses-box glass-panel-inner">
                   <div className="panel-toolbar-header-inline">
-                    <h3>{language === 'UZ' ? "Zaif tomonlar" : "Weaknesses"}</h3>
+                    <h3>{tr("Zaif tomonlar","Weaknesses")}</h3>
                     <button 
                       type="button" 
                       className="add-bullet-btn" 
@@ -2195,15 +2216,15 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
       {/* 1. ADD CATEGORY MODAL */}
       {showCategoryModal && (
-        <div className="admin-modal-overlay show">
+        <AdminDialog label={tr("Kategoriya","Category")} onClose={()=>setShowCategoryModal(false)}>
           <div className="admin-modal-card glass-panel alert-style-modal">
             <div className="admin-modal-header">
-              <h3>{language === 'UZ' ? "Yangi kategoriya qo'shish" : "Add New Category"}</h3>
+              <h3>{tr("Yangi kategoriya qo'shish","Add New Category")}</h3>
             </div>
             <form onSubmit={handleCategorySubmit} className="admin-modal-form">
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz Kategoriya nomi</label>
+                  <label>UZ {tr("Kategoriya nomi","Category Name")}</label>
                   <input 
                     type="text" 
                     placeholder="Masalan: Veb-saytlar"
@@ -2214,7 +2235,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru Kategoriya nomi</label>
+                  <label>RU {tr("Kategoriya nomi","Category Name")}</label>
                   <input 
                     type="text" 
                     placeholder="Например: Веб-сайты"
@@ -2225,7 +2246,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               </div>
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng Kategoriya nomi</label>
+                  <label>ENG {tr("Kategoriya nomi","Category Name")}</label>
                   <input 
                     type="text" 
                     placeholder="e.g. Web Sites"
@@ -2234,7 +2255,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp Kategoriya nomi</label>
+                  <label>JP {tr("Kategoriya nomi","Category Name")}</label>
                   <input 
                     type="text" 
                     placeholder="例：ウェブサイト"
@@ -2251,30 +2272,30 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   setNewCategoryNameEn('');
                   setNewCategoryNameJp('');
                 }}>
-                  {language === 'UZ' ? "Bekor qilish" : "Cancel"}
+                  {tr("Bekor qilish","Cancel")}
                 </button>
                 <button type="submit" className="submit-btn">
-                  {language === 'UZ' ? "Qo'shish" : "Add"}
+                  {tr("Qo'shish","Add")}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
       {/* 2. ADD PROJECT MODAL */}
       {showProjectModal && (
-        <div className="admin-modal-overlay show">
+        <AdminDialog label={tr("Loyiha","Title")} onClose={()=>setShowProjectModal(false)}>
           <div className="admin-modal-card glass-panel project-modal-card">
             <div className="admin-modal-header">
-              <h3>{editingProject ? (language === 'UZ' ? "Loyihani tahrirlash" : "Edit Project") : (language === 'UZ' ? "Yangi loyiha qo'shish" : "Add New Project")}</h3>
+              <h3>{editingProject ? (tr("Loyihani tahrirlash","Edit Project")) : (tr("Yangi loyiha qo'shish","Add New Project"))}</h3>
             </div>
             <form onSubmit={handleProjectSubmit} className="admin-modal-form">
               
               {/* Project Name */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz Loyiha nomi</label>
+                  <label>UZ {tr("Loyiha nomi","Title")}</label>
                   <input 
                     type="text" 
                     placeholder="Loyiha nomini o'zbekcha kiriting"
@@ -2285,7 +2306,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru Loyiha nomi</label>
+                  <label>RU {tr("Loyiha nomi","Title")}</label>
                   <input 
                     type="text" 
                     placeholder="Введите название проекта на русском"
@@ -2296,7 +2317,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               </div>
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng Loyiha nomi</label>
+                  <label>ENG {tr("Loyiha nomi","Title")}</label>
                   <input 
                     type="text" 
                     placeholder="Enter project title in English"
@@ -2305,7 +2326,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp Loyiha nomi</label>
+                  <label>JP {tr("Loyiha nomi","Title")}</label>
                   <input 
                     type="text" 
                     placeholder="日本語でプロジェクト名を入力してください"
@@ -2317,47 +2338,45 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               {/* Category Selector */}
               <div className="editor-input-group">
-                <label>{language === 'UZ' ? "Kategoriya" : "Category"}</label>
+                <label>{tr("Kategoriya","Category")}</label>
                 <select 
                   className="editor-select"
                   value={projectForm.category}
                   onChange={(e) => setProjectForm({ ...projectForm, category: e.target.value })}
                 >
                   {categories.map(cat => (
-                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
               </div>
 
               {/* Project Type selection (PDF or Image) */}
               <div className="editor-input-group">
-                <label>{language === 'UZ' ? "Loyiha turi" : "Project Type"}</label>
+                <label>{tr("Loyiha turi","Project Type")}</label>
                 <div className="project-type-toggle-group">
                   <button 
                     type="button"
                     disabled={!!editingProject || uploadingImages || uploadingCover}
                     className={`type-toggle-btn ${projectForm.type === 'pdf' ? 'active-type' : ''}`}
-                    onClick={() => setProjectForm({ ...projectForm, type: 'image', file: null, files: [], fileName: '' })}
-                  >
-                    PDF Document
-                  </button>
+                    onClick={() => setProjectForm({ ...projectForm, type: 'pdf', file: null, files: [], fileName: '' })}
+                  >{tr("PDF hujjat","PDF Document")}</button>
                   <button 
                     type="button"
                     disabled={!!editingProject || uploadingImages || uploadingCover}
                     className={`type-toggle-btn ${projectForm.type === 'image' ? 'active-type' : ''}`}
                     onClick={() => setProjectForm({ ...projectForm, type: 'image', file: null, files: [], fileName: '' })}
-                  >
-                    Image Gallery
-                  </button>
+                  >{tr("Rasm galereyasi","Image Gallery")}</button>
                 </div>
               </div>
 
               <div className="editor-input-group upload-input-group">
-                <label>{projectForm.type === 'pdf' ? 'PDF document' : (language === 'UZ' ? 'Loyiha rasmlari' : 'Project images')}</label>
-                {projectForm.type === 'pdf' ? <input type="file" accept="application/pdf" onChange={e => { const file=e.target.files[0]; if(file && (file.type!=='application/pdf'||file.size>25*1024*1024)){setProjectError('Choose a PDF smaller than 25 MB.');e.target.value='';return;} setProjectError('');setProjectForm(p=>({...p,file:file||null,fileName:file?.name||''})); }} /> : editingProject ? <div className="existing-gallery-note"><p>{language === 'UZ' ? 'Mavjud galereyani almashtirish backend bosqichida qo‘shiladi. Hozir muqova va matnlarni tahrirlash mumkin.' : 'Replacing an existing gallery will be available after the backend update. You can edit the cover and project text now.'}</p><div className="existing-gallery-images">{editingProject.images?.map(image=><img key={image.id} src={image.image} alt="Current gallery image" loading="lazy"/>)}</div></div> : <ImageUpload key="gallery" value={projectForm.files||[]} language={language} onBusy={setUploadingImages} onChange={files=>setProjectForm(p=>({...p,files,fileName:files.length+' images'}))}/>}
+                <label>{projectForm.type === 'pdf' ? tr('PDF hujjat','PDF document') : (tr("Loyiha rasmlari","Project images"))}</label>
+                {projectForm.type === 'pdf' ? <input type="file" accept="application/pdf" onChange={e => { const file=e.target.files[0]; if(file && (file.type!=='application/pdf'||file.size>25*1024*1024)){setProjectError('Choose a PDF smaller than 25 MB.');e.target.value='';return;} setProjectError('');setProjectForm(p=>({...p,file:file||null,fileName:file?.name||''})); }} /> : <ImageUpload key="gallery" value={projectForm.files||[]} language={language} onBusy={setUploadingImages} onChange={files=>setProjectForm(p=>({...p,files,fileName:files.length+' images'}))}/>}
+                {editingProject && projectForm.type==='image' && <div className="upload-previews">{(projectForm.keptImages||[]).map((image,index)=><div key={image.id} className="upload-preview"><img src={image.image} alt={'Image '+(index+1)}/><div><button type="button" aria-label={tr("Rasmni oldinga","Move image earlier")} disabled={index===0} onClick={()=>setProjectForm(form=>{const next=[...form.keptImages];[next[index-1],next[index]]=[next[index],next[index-1]];return {...form,keptImages:next};})}>←</button><button type="button" aria-label={tr("Rasmni keyinga","Move image later")} disabled={index===(projectForm.keptImages.length-1)} onClick={()=>setProjectForm(form=>{const next=[...form.keptImages];[next[index+1],next[index]]=[next[index],next[index+1]];return {...form,keptImages:next};})}>→</button><button type="button" aria-label={tr("Rasmni olib tashlash","Remove image")} onClick={()=>setProjectForm(form=>({...form,keptImages:form.keptImages.filter(item=>item.id!==image.id)}))}><X size={16}/></button></div></div>)}</div>}
+
               </div>
               <div className="editor-input-group upload-input-group">
-                <label>{language === 'UZ' ? 'Loyiha muqovasi' : 'Cover image'}</label>
+                <label>{tr("Loyiha muqovasi","Cover image")}</label>
                 <ImageUpload kind="cover" language={language} value={projectForm.coverImage?[projectForm.coverImage]:[]} existing={[editingProject?.cover_image]} onBusy={setUploadingCover} onChange={files=>setProjectForm(p=>({...p,coverImage:files[0]||null,coverImageName:files[0]?.name||''}))}/>
               </div>
               {projectError && <p className="upload-error" role="alert">{projectError}</p>}
@@ -2365,7 +2384,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               {/* Description */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz Tavsif</label>
+                  <label>UZ {tr("Tavsif","Description")}</label>
                   <textarea 
                     rows={2}
                     placeholder="Loyiha tavsifini o'zbekcha yozing..."
@@ -2375,7 +2394,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru Tavsif</label>
+                  <label>RU {tr("Tavsif","Description")}</label>
                   <textarea 
                     rows={2}
                     placeholder="Описание проекта на русском..."
@@ -2386,7 +2405,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               </div>
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng Tavsif</label>
+                  <label>ENG {tr("Tavsif","Description")}</label>
                   <textarea 
                     rows={2}
                     placeholder="Project description in English..."
@@ -2395,7 +2414,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp Tavsif</label>
+                  <label>JP {tr("Tavsif","Description")}</label>
                   <textarea 
                     rows={2}
                     placeholder="日本語のプロジェクト説明..."
@@ -2408,10 +2427,10 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               {/* Hashtags split inputs */}
               <div className="hashtags-dual-inputs">
                 <div className="editor-input-group">
-                  <label>{language === 'UZ' ? "Asosiy Hashtag" : "Main Hashtag"}</label>
+                  <label>{tr("Asosiy Hashtag","Main Hashtag")}</label>
                   <input 
                     type="text" 
-                    placeholder={language === 'UZ' ? "Masalan: presentation" : "e.g. presentation"}
+                    placeholder={tr("Masalan: presentation","e.g. presentation")}
                     value={projectForm.mainHashtag}
                     onChange={(e) => setProjectForm({ ...projectForm, mainHashtag: e.target.value })}
                     required
@@ -2419,10 +2438,10 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                 </div>
 
                 <div className="editor-input-group">
-                  <label>{language === 'UZ' ? "Oddiy Hashtaglar" : "Regular Hashtags"}</label>
+                  <label>{tr("Oddiy Hashtaglar","Regular Hashtags")}</label>
                   <input 
                     type="text" 
-                    placeholder={language === 'UZ' ? "Masalan: #deck #powerpoint" : "e.g. #deck #powerpoint"}
+                    placeholder={tr("Masalan: #deck #powerpoint","e.g. #deck #powerpoint")}
                     value={projectForm.regularHashtags}
                     onChange={(e) => setProjectForm({ ...projectForm, regularHashtags: e.target.value })}
                     required
@@ -2440,7 +2459,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   title_ru: '',
                   title_en: '',
                   title_jp: '',
-                  category: categories[0]?.name || 'UX_UI',
+                  category: categories[0]?.id || '',
                   type: 'image',
                   file: null,
                   fileName: '',
@@ -2454,29 +2473,29 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   regularHashtags: ''
                 });
               }}>
-                {language === 'UZ' ? "Bekor qilish" : "Cancel"}
+                {tr("Bekor qilish","Cancel")}
                 </button>
                 <button type="submit" className="submit-btn" disabled={uploadingImages || uploadingCover || savingProject}>
-                  {savingProject ? (language === 'UZ' ? 'Saqlanmoqda…' : 'Saving…') : editingProject ? (language === 'UZ' ? "Saqlash" : "Save") : (language === 'UZ' ? "Qo'shish" : "Add")}
+                  {savingProject ? (tr("Saqlanmoqda…","Saving…")) : editingProject ? (tr("Saqlash","Save")) : (tr("Qo'shish","Add"))}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
       {/* 3. ADD CERTIFICATE MODAL */}
       {showCertModal && (
-        <div className="admin-modal-overlay show">
+        <AdminDialog label={tr("Sertifikat","Certificates")} onClose={()=>setShowCertModal(false)}>
           <div className="admin-modal-card glass-panel project-modal-card">
             <div className="admin-modal-header">
-              <h3>{editingCert ? (language === 'UZ' ? "Sertifikatni tahrirlash" : "Edit Certificate") : (language === 'UZ' ? "Yangi sertifikat qo'shish" : "Add New Certificate")}</h3>
+              <h3>{editingCert ? (tr("Sertifikatni tahrirlash","Edit Certificate")) : (tr("Yangi sertifikat qo'shish","Add New Certificate"))}</h3>
             </div>
             <form onSubmit={handleCertSubmit} className="admin-modal-form">
               
               {/* Cover Image Upload field */}
               <div className="editor-input-group upload-input-group">
-                <label>{language === 'UZ' ? "Sertifikat muqovasi (Cover Image)" : "Certificate Cover Image"}</label>
+                <label>{tr("Sertifikat muqovasi (Cover Image)","Certificate Cover Image")}</label>
                 <div className="custom-file-upload-wrap">
                   <input 
                     type="file" 
@@ -2504,7 +2523,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     <span>
                       {certForm.coverImageName 
                         ? certForm.coverImageName 
-                        : (language === 'UZ' ? "Muqova rasmini tanlash" : "Choose cover image")
+                        : (tr("Muqova rasmini tanlash","Choose cover image"))
                       }
                     </span>
                   </button>
@@ -2514,7 +2533,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               {/* Certificate Name in 4 languages */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz Sertifikat nomi</label>
+                  <label>UZ {tr("Sertifikat nomi","Title")}</label>
                   <input 
                     type="text" 
                     placeholder="Sertifikat nomini o'zbekcha kiriting"
@@ -2525,7 +2544,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru Sertifikat nomi</label>
+                  <label>RU {tr("Sertifikat nomi","Title")}</label>
                   <input 
                     type="text" 
                     placeholder="Введите название сертификата на русском"
@@ -2537,7 +2556,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng Sertifikat nomi</label>
+                  <label>ENG {tr("Sertifikat nomi","Title")}</label>
                   <input 
                     type="text" 
                     placeholder="Enter certificate name in English"
@@ -2546,7 +2565,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp Sertifikat nomi</label>
+                  <label>JP {tr("Sertifikat nomi","Title")}</label>
                   <input 
                     type="text" 
                     placeholder="日本語で証明書名を入力してください"
@@ -2557,8 +2576,9 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               </div>
 
               {/* PDF File Upload field */}
+              <div className="form-row-grid-2"><label className="editor-input-group">{t.certificates.colOrg}<input value={certForm.organization||''} maxLength={255} onChange={event=>setCertForm({...certForm,organization:event.target.value})}/></label><label className="editor-input-group">{t.certificates.colYear}<input value={certForm.year||''} inputMode="numeric" pattern="[0-9]{4}" maxLength={4} onChange={event=>setCertForm({...certForm,year:event.target.value})}/></label></div>
               <div className="editor-input-group upload-input-group">
-                <label>{language === 'UZ' ? "PDF Fayli" : "PDF File"}</label>
+                <label>{tr("PDF Fayli","PDF File")}</label>
                 <div className="custom-file-upload-wrap">
                   <input 
                     type="file" 
@@ -2586,7 +2606,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     <span>
                       {certForm.pdfFileName 
                         ? certForm.pdfFileName 
-                        : (language === 'UZ' ? "PDF faylini tanlash" : "Choose PDF file")
+                        : (tr("PDF faylini tanlash","Choose PDF file"))
                       }
                     </span>
                   </button>
@@ -2606,26 +2626,26 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     coverImage: null,
                     coverImageName: '',
                     pdfFile: null,
-                    pdfFileName: ''
+                    pdfFileName: '', organization: '', year: ''
                   });
                 }}>
-                  {language === 'UZ' ? "Bekor qilish" : "Cancel"}
+                  {tr("Bekor qilish","Cancel")}
                 </button>
                 <button type="submit" className="submit-btn">
-                  {editingCert ? (language === 'UZ' ? "Saqlash" : "Save") : (language === 'UZ' ? "Qo'shish" : "Add")}
+                  {editingCert ? (tr("Saqlash","Save")) : (tr("Qo'shish","Add"))}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
       {/* 4. ADD SKILL MODAL */}
       {showSkillModal && (
-        <div className="admin-modal-overlay show">
+        <AdminDialog label={tr("Ko‘nikma","Skills")} onClose={()=>setShowSkillModal(false)}>
           <div className="admin-modal-card glass-panel alert-style-modal project-modal-card">
             <div className="admin-modal-header">
-              <h3>{language === 'UZ' ? "Yangi ko'nikma qo'shish" : "Add New Skill"}</h3>
+              <h3>{tr("Yangi ko'nikma qo'shish","Add New Skill")}</h3>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
@@ -2668,7 +2688,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               {/* Skill Name in 4 languages */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz Ko'nikma nomi</label>
+                  <label>UZ {tr("Ko'nikma nomi","Skill Name")}</label>
                   <input 
                     type="text" 
                     placeholder="Ko'nikma nomini o'zbekcha kiriting"
@@ -2679,7 +2699,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru Ko'nikma nomi</label>
+                  <label>RU {tr("Ko'nikma nomi","Skill Name")}</label>
                   <input 
                     type="text" 
                     placeholder="Введите название навыка на русском"
@@ -2691,7 +2711,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng Ko'nikma nomi</label>
+                  <label>ENG {tr("Ko'nikma nomi","Skill Name")}</label>
                   <input 
                     type="text" 
                     placeholder="Enter skill name in English"
@@ -2700,7 +2720,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp Ko'nikma nomi</label>
+                  <label>JP {tr("Ko'nikma nomi","Skill Name")}</label>
                   <input 
                     type="text" 
                     placeholder="日本語でスキル名を入力してください"
@@ -2712,7 +2732,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               {/* Skill Level */}
               <div className="editor-input-group">
-                <label>{language === 'UZ' ? "Daraja (%)" : "Level (%)"}</label>
+                <label>{tr("Daraja (%)","Level (%)")}</label>
                 <input 
                   type="number" 
                   min="0"
@@ -2725,7 +2745,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               {/* Skill Icon Upload field */}
               <div className="editor-input-group upload-input-group">
-                <label>{language === 'UZ' ? "Ko'nikma belgisi (Icon / Image)" : "Skill Icon / Image"}</label>
+                <label>{tr("Ko'nikma belgisi (Icon / Image)","Skill Icon / Image")}</label>
                 <div className="custom-file-upload-wrap">
                   <input 
                     type="file" 
@@ -2753,7 +2773,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     <span>
                       {skillForm.imageName 
                         ? skillForm.imageName 
-                        : (language === 'UZ' ? "Rasm yuklash" : "Upload Image")
+                        : (tr("Rasm yuklash","Upload Image"))
                       }
                     </span>
                   </button>
@@ -2774,23 +2794,23 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     imageName: ''
                   });
                 }}>
-                  {language === 'UZ' ? "Bekor qilish" : "Cancel"}
+                  {tr("Bekor qilish","Cancel")}
                 </button>
                 <button type="submit" className="submit-btn">
-                  {language === 'UZ' ? "Qo'shish" : "Add"}
+                  {tr("Qo'shish","Add")}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
       {/* 5. ADD JOB MODAL */}
       {showJobModal && (
-        <div className="admin-modal-overlay show">
+        <AdminDialog label={tr("Ish tajribasi","Work Experience")} onClose={()=>setShowJobModal(false)}>
           <div className="admin-modal-card glass-panel project-modal-card">
             <div className="admin-modal-header">
-              <h3>{language === 'UZ' ? "Yangi ish tajribasi qo'shish" : "Add Work Experience"}</h3>
+              <h3>{tr("Yangi ish tajribasi qo'shish","Add Work Experience")}</h3>
             </div>
             <form onSubmit={handleJobSubmit} className="admin-modal-form">
               
@@ -2798,7 +2818,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               <div className="hashtags-dual-inputs">
                 {/* Start Year */}
                 <div className="editor-input-group">
-                  <label>{language === 'UZ' ? "Boshlanish yili" : "Start Year"}</label>
+                  <label>{tr("Boshlanish yili","Start Year")}</label>
                   <input 
                     type="number" 
                     min="1990" 
@@ -2812,7 +2832,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
                 {/* End Year */}
                 <div className="editor-input-group">
-                  <label>{language === 'UZ' ? "Tugash yili" : "End Year"}</label>
+                  <label>{tr("Tugash yili","End Year")}</label>
                   <div className="end-year-toggle-wrap">
                     <input 
                       type="number" 
@@ -2830,7 +2850,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                         checked={jobForm.isCurrent}
                         onChange={(e) => setJobForm({ ...jobForm, isCurrent: e.target.checked })}
                       />
-                      <span>{language === 'UZ' ? "Hozir (Present)" : "Present"}</span>
+                      <span>{tr("Hozir (Present)","Present")}</span>
                     </label>
                   </div>
                 </div>
@@ -2839,7 +2859,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               {/* Role Title in 4 languages */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz Lavozim nomi (Role)</label>
+                  <label>UZ {tr("Lavozim nomi (Role)","Job Title")}</label>
                   <input 
                     type="text" 
                     placeholder="Lavozim nomini o'zbekcha kiriting"
@@ -2849,7 +2869,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru Lavozim nomi (Role)</label>
+                  <label>RU {tr("Lavozim nomi (Role)","Job Title")}</label>
                   <input 
                     type="text" 
                     placeholder="Название должности на русском"
@@ -2861,7 +2881,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng Lavozim nomi (Role)</label>
+                  <label>ENG {tr("Lavozim nomi (Role)","Job Title")}</label>
                   <input 
                     type="text" 
                     placeholder="Job title in English"
@@ -2870,7 +2890,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp Lavozim nomi (Role)</label>
+                  <label>JP {tr("Lavozim nomi (Role)","Job Title")}</label>
                   <input 
                     type="text" 
                     placeholder="日本語で職位名を入力してください"
@@ -2883,7 +2903,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               {/* Company Name in 4 languages */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz Kompaniya nomi (Company)</label>
+                  <label>UZ {tr("Kompaniya nomi (Company)","Organization")}</label>
                   <input 
                     type="text" 
                     placeholder="Kompaniya nomini o'zbekcha kiriting"
@@ -2893,7 +2913,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru Kompaniya nomi (Company)</label>
+                  <label>RU {tr("Kompaniya nomi (Company)","Organization")}</label>
                   <input 
                     type="text" 
                     placeholder="Название компании на русском"
@@ -2905,7 +2925,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng Kompaniya nomi (Company)</label>
+                  <label>ENG {tr("Kompaniya nomi (Company)","Organization")}</label>
                   <input 
                     type="text" 
                     placeholder="Company name in English"
@@ -2914,7 +2934,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp Kompaniya nomi (Company)</label>
+                  <label>JP {tr("Kompaniya nomi (Company)","Organization")}</label>
                   <input 
                     type="text" 
                     placeholder="日本語で会社名を入力してください"
@@ -2926,7 +2946,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               {/* Logo Upload field */}
               <div className="editor-input-group upload-input-group">
-                <label>{language === 'UZ' ? "Kompaniya Logotipi (Logo)" : "Company Logo"}</label>
+                <label>{tr("Kompaniya Logotipi (Logo)","Company Logo")}</label>
                 <div className="custom-file-upload-wrap">
                   <input 
                     type="file" 
@@ -2953,7 +2973,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     <span>
                       {jobForm.logoName 
                         ? jobForm.logoName 
-                        : (language === 'UZ' ? "Rasm yuklash (Ixtiyoriy)" : "Upload Image (Optional)")
+                        : (tr("Rasm yuklash (Ixtiyoriy)","Upload Image (Optional)"))
                       }
                     </span>
                   </button>
@@ -2963,7 +2983,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               {/* Description in 4 languages */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz Batafsil tavsif (Description)</label>
+                  <label>UZ {tr("Batafsil tavsif (Description)","Description")}</label>
                   <textarea 
                     rows={3}
                     placeholder="Batafsil tavsifni o'zbekcha yozing..."
@@ -2973,7 +2993,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru Batafsil tavsif (Description)</label>
+                  <label>RU {tr("Batafsil tavsif (Description)","Description")}</label>
                   <textarea 
                     rows={3}
                     placeholder="Описание обязанностей на русском..."
@@ -2985,7 +3005,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng Batafsil tavsif (Description)</label>
+                  <label>ENG {tr("Batafsil tavsif (Description)","Description")}</label>
                   <textarea 
                     rows={3}
                     placeholder="Detailed description in English..."
@@ -2994,7 +3014,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp Batafsil tavsif (Description)</label>
+                  <label>JP {tr("Batafsil tavsif (Description)","Description")}</label>
                   <textarea 
                     rows={3}
                     placeholder="日本語で詳しい説明を入力してください..."
@@ -3028,30 +3048,30 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     logoName: ''
                   });
                 }}>
-                  {language === 'UZ' ? "Bekor qilish" : "Cancel"}
+                  {tr("Bekor qilish","Cancel")}
                 </button>
                 <button type="submit" className="submit-btn">
-                  {language === 'UZ' ? "Qo'shish" : "Add"}
+                  {tr("Qo'shish","Add")}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
       {/* 5.1. ADD EDUCATION MODAL */}
       {showEducationModal && (
-        <div className="admin-modal-overlay show">
+        <AdminDialog label={tr("Ta’lim","Education")} onClose={()=>setShowEducationModal(false)}>
           <div className="admin-modal-card glass-panel project-modal-card">
             <div className="admin-modal-header">
-              <h3>{editingEducation ? (language === 'UZ' ? "Ta'limni tahrirlash" : "Edit Education") : (language === 'UZ' ? "Yangi ta'lim qo'shish" : "Add New Education")}</h3>
+              <h3>{editingEducation ? (tr("Ta'limni tahrirlash","Edit Education")) : (tr("Yangi ta'lim qo'shish","Add New Education"))}</h3>
             </div>
             <form onSubmit={handleEducationSubmit} className="admin-modal-form">
               
               {/* Institution Name in 4 languages */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz Muassasa nomi (Name)</label>
+                  <label>UZ {tr("Muassasa nomi (Name)","Institution Name")}</label>
                   <input 
                     type="text" 
                     placeholder="Muassasa nomini o'zbekcha kiriting"
@@ -3061,7 +3081,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru Muassasa nomi (Name)</label>
+                  <label>RU {tr("Muassasa nomi (Name)","Institution Name")}</label>
                   <input 
                     type="text" 
                     placeholder="Название учреждения на русском"
@@ -3073,7 +3093,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng Muassasa nomi (Name)</label>
+                  <label>ENG {tr("Muassasa nomi (Name)","Institution Name")}</label>
                   <input 
                     type="text" 
                     placeholder="Institution name in English"
@@ -3082,7 +3102,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp Muassasa nomi (Name)</label>
+                  <label>JP {tr("Muassasa nomi (Name)","Institution Name")}</label>
                   <input 
                     type="text" 
                     placeholder="日本語で機関名を入力してください"
@@ -3094,7 +3114,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               {/* Period / Duration */}
               <div className="editor-input-group">
-                <label>{language === 'UZ' ? "Davomiyligi (yil hisobida, masalan: 2020-2024 yoki 4 yil)" : "Duration (in years, e.g. 2020-2024 or 4 years)"}</label>
+                <label>{tr("Davomiyligi (yil hisobida, masalan: 2020-2024 yoki 4 yil)","Duration (in years, e.g. 2020-2024 or 4 years)")}</label>
                 <input 
                   type="text" 
                   placeholder="2020 - 2024"
@@ -3106,7 +3126,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               {/* Logo Upload field */}
               <div className="editor-input-group upload-input-group">
-                <label>{language === 'UZ' ? "Muassasa Logotipi (Logo)" : "Institution Logo"}</label>
+                <label>{tr("Muassasa Logotipi (Logo)","Institution Logo")}</label>
                 <div className="custom-file-upload-wrap">
                   <input 
                     type="file" 
@@ -3133,7 +3153,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     <span>
                       {educationForm.logoName 
                         ? educationForm.logoName 
-                        : (language === 'UZ' ? "Rasm yuklash (Ixtiyoriy)" : "Upload Image (Optional)")
+                        : (tr("Rasm yuklash (Ixtiyoriy)","Upload Image (Optional)"))
                       }
                     </span>
                   </button>
@@ -3143,7 +3163,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               {/* Description in 4 languages */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz Batafsil tavsif (Description)</label>
+                  <label>UZ {tr("Batafsil tavsif (Description)","Description")}</label>
                   <textarea 
                     rows={3}
                     placeholder="Batafsil tavsifni o'zbekcha yozing..."
@@ -3153,7 +3173,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru Batafsil tavsif (Description)</label>
+                  <label>RU {tr("Batafsil tavsif (Description)","Description")}</label>
                   <textarea 
                     rows={3}
                     placeholder="Описание на русском..."
@@ -3165,7 +3185,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng Batafsil tavsif (Description)</label>
+                  <label>ENG {tr("Batafsil tavsif (Description)","Description")}</label>
                   <textarea 
                     rows={3}
                     placeholder="Detailed description in English..."
@@ -3174,7 +3194,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp Batafsil tavsif (Description)</label>
+                  <label>JP {tr("Batafsil tavsif (Description)","Description")}</label>
                   <textarea 
                     rows={3}
                     placeholder="日本語で詳しい説明を入力してください..."
@@ -3202,23 +3222,23 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                     logoName: ''
                   });
                 }}>
-                  {language === 'UZ' ? "Bekor qilish" : "Cancel"}
+                  {tr("Bekor qilish","Cancel")}
                 </button>
                 <button type="submit" className="submit-btn">
-                  {editingEducation ? (language === 'UZ' ? "Saqlash" : "Save") : (language === 'UZ' ? "Qo'shish" : "Add")}
+                  {editingEducation ? (tr("Saqlash","Save")) : (tr("Qo'shish","Add"))}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
       {/* 6. ADD PERSONAL SKILL MODAL */}
       {showPersonalSkillModal && (
-        <div className="admin-modal-overlay show">
+        <AdminDialog label={tr("Shaxsiy ko‘nikma","Personal Skills")} onClose={()=>setShowPersonalSkillModal(false)}>
           <div className="admin-modal-card glass-panel alert-style-modal project-modal-card">
             <div className="admin-modal-header">
-              <h3>{language === 'UZ' ? "Shaxsiy ko'nikma qo'shish" : "Add Personal Skill"}</h3>
+              <h3>{tr("Shaxsiy ko'nikma qo'shish","Add Personal Skill")}</h3>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
@@ -3249,7 +3269,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz ko'nikma</label>
+                  <label>UZ {tr("ko'nikma","Skill Name")}</label>
                   <input 
                     type="text" 
                     placeholder="Masalan: Stressga chidamlilik"
@@ -3260,7 +3280,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru ko'nikma</label>
+                  <label>RU {tr("ko'nikma","Skill Name")}</label>
                   <input 
                     type="text" 
                     placeholder="Например: Стрессоустойчивость"
@@ -3272,7 +3292,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng ko'nikma</label>
+                  <label>ENG {tr("ko'nikma","Skill Name")}</label>
                   <input 
                     type="text" 
                     placeholder="e.g. Stress resistance"
@@ -3281,7 +3301,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp ko'nikma</label>
+                  <label>JP {tr("ko'nikma","Skill Name")}</label>
                   <input 
                     type="text" 
                     placeholder="例：ストレス耐性"
@@ -3296,23 +3316,23 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   setShowPersonalSkillModal(false);
                   setPersonalSkillForm({ name_uz: '', name_ru: '', name_en: '', name_jp: '' });
                 }}>
-                  {language === 'UZ' ? "Bekor qilish" : "Cancel"}
+                  {tr("Bekor qilish","Cancel")}
                 </button>
                 <button type="submit" className="submit-btn">
-                  {language === 'UZ' ? "Qo'shish" : "Add"}
+                  {tr("Qo'shish","Add")}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
       {/* 7. ADD STRENGTH MODAL */}
       {showStrengthModal && (
-        <div className="admin-modal-overlay show">
+        <AdminDialog label={tr("Kuchli tomon","Strengths")} onClose={()=>setShowStrengthModal(false)}>
           <div className="admin-modal-card glass-panel alert-style-modal project-modal-card">
             <div className="admin-modal-header">
-              <h3>{language === 'UZ' ? "Kuchli tomon qo'shish" : "Add Strength"}</h3>
+              <h3>{tr("Kuchli tomon qo'shish","Add Strength")}</h3>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
@@ -3343,7 +3363,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz kuchli tomonlar</label>
+                  <label>UZ {tr("kuchli tomonlar","Strengths")}</label>
                   <input 
                     type="text" 
                     placeholder="Masalan: Tafsilotga e'tiborli"
@@ -3354,7 +3374,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru kuchli tomonlar</label>
+                  <label>RU {tr("kuchli tomonlar","Strengths")}</label>
                   <input 
                     type="text" 
                     placeholder="Например: Внимание к деталям"
@@ -3366,7 +3386,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng kuchli tomonlar</label>
+                  <label>ENG {tr("kuchli tomonlar","Strengths")}</label>
                   <input 
                     type="text" 
                     placeholder="e.g. Attention to detail"
@@ -3375,7 +3395,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp kuchli tomonlar</label>
+                  <label>JP {tr("kuchli tomonlar","Strengths")}</label>
                   <input 
                     type="text" 
                     placeholder="例：細部へのこだわり"
@@ -3390,23 +3410,23 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   setShowStrengthModal(false);
                   setStrengthForm({ text_uz: '', text_ru: '', text_en: '', text_jp: '' });
                 }}>
-                  {language === 'UZ' ? "Bekor qilish" : "Cancel"}
+                  {tr("Bekor qilish","Cancel")}
                 </button>
                 <button type="submit" className="submit-btn">
-                  {language === 'UZ' ? "Qo'shish" : "Add"}
+                  {tr("Qo'shish","Add")}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
       {/* 8. ADD WEAKNESS MODAL */}
       {showWeaknessModal && (
-        <div className="admin-modal-overlay show">
+        <AdminDialog label={tr("Zaif tomon","Weaknesses")} onClose={()=>setShowWeaknessModal(false)}>
           <div className="admin-modal-card glass-panel alert-style-modal project-modal-card">
             <div className="admin-modal-header">
-              <h3>{language === 'UZ' ? "Zaif tomon qo'shish" : "Add Weakness"}</h3>
+              <h3>{tr("Zaif tomon qo'shish","Add Weakness")}</h3>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
@@ -3437,7 +3457,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Uz Zaif tomonlar</label>
+                  <label>UZ {tr("Zaif tomonlar","Weaknesses")}</label>
                   <input 
                     type="text" 
                     placeholder="Masalan: Ishga haddan tashqari berilib ketish"
@@ -3448,7 +3468,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Ru Zaif tomonlar</label>
+                  <label>RU {tr("Zaif tomonlar","Weaknesses")}</label>
                   <input 
                     type="text" 
                     placeholder="Например: Слишком сильная вовлеченность в работу"
@@ -3460,7 +3480,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>Eng Zaif tomonlar</label>
+                  <label>ENG {tr("Zaif tomonlar","Weaknesses")}</label>
                   <input 
                     type="text" 
                     placeholder="e.g. Over-involvement in work"
@@ -3469,7 +3489,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>Jp Zaif tomonlar</label>
+                  <label>JP {tr("Zaif tomonlar","Weaknesses")}</label>
                   <input 
                     type="text" 
                     placeholder="例：仕事への過度の没頭"
@@ -3484,15 +3504,15 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                   setShowWeaknessModal(false);
                   setWeaknessForm({ text_uz: '', text_ru: '', text_en: '', text_jp: '' });
                 }}>
-                  {language === 'UZ' ? "Bekor qilish" : "Cancel"}
+                  {tr("Bekor qilish","Cancel")}
                 </button>
                 <button type="submit" className="submit-btn">
-                  {language === 'UZ' ? "Qo'shish" : "Add"}
+                  {tr("Qo'shish","Add")}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </AdminDialog>
       )}
     </div>
   );

@@ -14,3 +14,20 @@
 [data-theme=light] .sidebar-brand,[data-theme=light] .sidebar-footer,[data-theme=light] .workspace-header{border-color:var(--border)}
 .project-modal-card input[type=file]{width:100%;padding:15px;border:1px dashed var(--border);border-radius:12px}
 @media(max-width:600px){.admin-modal-card{max-height:94dvh}.admin-modal-card input,.admin-modal-card textarea,.admin-modal-card select{font-size:16px}.admin-theme-toggle{bottom:12px;right:12px}.workspace-content{padding:18px}.workspace-title-section h1{font-size:23px}.admin-modal-overlay{padding:8px}}
+/* Header layout remains readable at narrow widths. */
+.admin-dashboard-container,.dashboard-workspace,.workspace-content{min-width:0;max-width:100%}
+.workspace-header{gap:12px;min-height:76px;height:auto;padding-block:12px;box-sizing:border-box}
+.workspace-title-section{min-width:0;flex:1}
+.workspace-title-section h1{font-size:clamp(16px,2vw,24px);line-height:1.25;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.breadcrumbs{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:10px;margin-top:4px}
+.workspace-header-actions{flex-shrink:0;gap:8px}
+.admin-language-select{background:var(--glass-strong);color:var(--text-primary);border:1px solid var(--border);border-radius:12px;min-height:40px;max-width:72px;padding:6px;font-size:12px}
+.mobile-hamburger-btn{flex-shrink:0;order:-1;min-width:40px;min-height:40px}
+.admin-modal-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;z-index:500}
+.admin-modal-card{width:min(760px,100%)!important;max-width:760px!important;max-height:90dvh;padding:28px;box-sizing:border-box;overflow-y:auto}
+.admin-modal-card>*{min-width:0}.admin-modal-form,.admin-modal-card form{width:100%;box-sizing:border-box}
+.admin-modal-header h3{color:var(--text-primary);background:none;-webkit-text-fill-color:var(--text-primary)}
+@media(max-width:900px){.admin-name{display:none}.workspace-header{min-height:72px;padding:12px 16px}.workspace-header-actions{gap:6px}.admin-profile-badge{display:none}}
+@media(max-width:600px){.workspace-header{padding:10px 12px;gap:8px;min-height:68px}.workspace-title-section h1{font-size:16px}.breadcrumbs{font-size:9px}.workspace-header-actions .header-action-btn{width:36px;height:36px;min-width:36px}.admin-language-select{min-height:36px;width:58px}.admin-modal-overlay{padding:8px}.admin-modal-card{padding:20px;width:100%!important;max-height:94dvh}.form-row-grid-2{grid-template-columns:1fr}.project-type-toggle-group{min-width:0;gap:6px}.type-toggle-btn{min-width:0;padding:12px 6px;font-size:12px}.hashtags-dual-inputs{min-width:0}.dashboard-table-wrapper{max-width:100%}}
+@media(max-width:360px){.workspace-header-actions .notification-bell{display:none}.workspace-title-section h1{font-size:14px}}
+.admin-error-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px;border:1px solid var(--border);background:var(--glass-strong);color:var(--text-primary);overflow-wrap:anywhere}.admin-error-banner button{border:0;background:none;color:inherit;flex-shrink:0}.admin-modal-card .editor-input-group input,.admin-modal-card .editor-input-group select,.admin-modal-card .editor-input-group textarea{max-width:100%;box-sizing:border-box}.workspace-header-actions{min-width:0}
