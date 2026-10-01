@@ -6,15 +6,23 @@ import ContentState from './ContentState';
 import MediaViewer from './MediaViewer';
 import Reveal from './Reveal';
 
+const aboutQuote = {
+ UZ: { body: 'Bugun dizaynerlar, ayniqsa frilanserlar, bir holatga ko‘p duch kelishadi: soatlab mehnat qilib yaratgan dizaynini ko‘rsatishsa, «Bu AI’da qilingan-ku», degan gapni eshitishadi. Aslida, AI — faqat vosita. U ishni tezlashtirishi va unumdorlikni oshirishi mumkin.', ending: 'lekin, hikoyani asl mohiyatini faqatgina dizayner ifodalab beradi.' },
+ ENG: { body: 'Today, designers — especially freelancers — often spend hours on a design, only to hear, “This was made with AI.” AI is a tool. It can speed up the work and improve productivity.', ending: 'But only the designer can express the true essence of the story.' },
+ RU: { body: 'Сегодня дизайнеры, особенно фрилансеры, часто сталкиваются с одной ситуацией: показывают работу, на которую потратили часы, и слышат: «Это же сделано в ИИ». ИИ — лишь инструмент. Он может ускорить работу и повысить продуктивность.', ending: 'Но только дизайнер может передать истинную суть истории.' },
+ JP: { body: '今、デザイナー、とりわけフリーランスは、何時間もかけて制作したデザインに「AIで作ったんでしょう」と言われることがあります。AIはあくまで道具です。作業を速め、生産性を高めることはできます。', ending: 'けれど、物語の本質を表現できるのは、デザイナーだけです。' }
+};
+
 function SectionTitle({ index, label, title }) { return <div className="section-heading"><div><span className="eyebrow">{index} / {label}</span><h2>{title}</h2></div></div>; }
 export function AboutSection({ language, state }) {
   const about=state.data, name=localized(about,'name',language), bio=localized(about,'bio',language);
   const hasContent=Boolean(name||bio||about?.image);
+  const quote=aboutQuote[language]||aboutQuote.ENG;
   return <section className="section about-section" id="about"><div className="container">
     <ContentState state={state} language={language} empty={!hasContent}/>
     {!state.loading&&!state.error&&hasContent&&<div className={'about-layout'+(!about?.image?' about-text-only':'')}>
       {about?.image&&<Reveal x={-30} y={0} duration={.7} amount={.3} className="portrait-glass"><img src={about.image} alt={name} loading="lazy" decoding="async"/></Reveal>}
-      <Reveal x={30} y={0} duration={.7} delay={.1} amount={.3} className="about-copy"><span className="eyebrow">01 / {(locales[language]||locales.ENG).nav.about}</span>{name&&<h2>{name}<span className="accent">.</span></h2>}{bio&&<p>{bio}</p>}<a className="text-button" href="#contact">{language==='UZ'?'Birga ishlaylik':'Let’s work together'}<ArrowUpRight size={18}/></a></Reveal>
+      <Reveal x={30} y={0} duration={.7} delay={.1} amount={.3} className="about-copy"><span className="eyebrow">01 / {(locales[language]||locales.ENG).nav.about}</span>{name&&<h2>{name}<span className="accent">.</span></h2>}{bio&&<p>{bio}</p>}<blockquote className="about-quote"><span className="about-quote-mark" aria-hidden="true">“</span><p>{quote.body} {quote.ending}</p></blockquote><a className="text-button" href="#contact">{language==='UZ'?'Birga ishlaylik':'Let’s work together'}<ArrowUpRight size={18}/></a></Reveal>
     </div>}
   </div></section>;
 }
