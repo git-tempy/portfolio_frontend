@@ -28,6 +28,7 @@ import {
   Menu
 } from 'lucide-react';
 import './AdminDashboard.css';
+import { adminFetch } from '../lib/adminApi';
 import ImageUpload from './ImageUpload';
 import './AdminRefresh.css';
 
@@ -301,17 +302,10 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
 
   // Strengths list states
-  const [strengths, setStrengths] = useState([
-    "Tezda yangi vositalarni o'rganaman",
-    "Tafsilotga juda e'tiborli",
-    "Muammolarni tahliliy hal qila olish"
-  ]);
+  const [strengths, setStrengths] = useState([]);
 
   // Weaknesses list states
-  const [weaknesses, setWeaknesses] = useState([
-    "Ishga juda berilib ketish",
-    "Boshida ishlarni hammaga bo'lib bera olmaslik"
-  ]);
+  const [weaknesses, setWeaknesses] = useState([]);
 
   // Job Modal states
   const [showJobModal, setShowJobModal] = useState(false);
@@ -351,34 +345,22 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
     logoName: ''
   });
 
-  // Mock Database State
-  const [categories, setCategories] = useState([
-    { id: 1, name: "UX_UI", count: 4, status: "Active" },
-    { id: 2, name: "WEB_DESIGN", count: 3, status: "Active" },
-    { id: 3, name: "PRESENTATION", count: 3, status: "Active" },
-    { id: 4, name: "PRINT_DESIGN", count: 2, status: "Active" }
-  ]);
+  // Database content starts empty until the API loads it.
+  const [categories, setCategories] = useState([]);
 
-  const [projects, setProjects] = useState([
-    { id: 1, title: "NoQ pitch", category: "PRESENTATION", type: "Presentation" },
-    { id: 2, title: "Korporativ broshyura", category: "PRINT_DESIGN", type: "Print" },
-    { id: 3, title: "Tech Startup sayti", category: "WEB_DESIGN", type: "Web Design" },
-    { id: 4, title: "Fintech ilovasi", category: "UX_UI", type: "Mobile UI/UX" },
-    { id: 5, title: "Dashboard analitika", category: "UX_UI", type: "Web UI/UX" },
-    { id: 6, title: "Marketing Pitch Deck", category: "PRESENTATION", type: "Presentation" }
-  ]);
+  const [projects, setProjects] = useState([]);
 
   const [aboutData, setAboutData] = useState({
-    name_uz: 'Feruzxon Muxtarov',
+    name_uz: '',
     name_ru: '',
     name_en: '',
     name_jp: '',
-    bio_uz: "Men Feruzxon Muxtarov — Toshkentda yashovchi ijodkor dizayner va art direktor. 5 yildan ortiq vaqt davomida brendlar uchun vizual identitet, raqamli mahsulotlar va marketing materiallarini yarataman. Maqsadim — har bir loyihaga estetika, ma'no va aniqlik kiritish.",
+    bio_uz: '',
     bio_ru: '',
     bio_en: '',
     bio_jp: '',
     image: null,
-    imageName: "feruzxon.png"
+    imageName: ""
   });
 
   const [aboutSaved, setAboutSaved] = useState(false);
@@ -407,22 +389,14 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
   const [editingProject, setEditingProject] = useState(null);
 
   // Missing States
-  const [skills, setSkills] = useState([
-    { id: 1, name: "Figma", level: 95, type: "Software", imageName: "figma.png" },
-    { id: 2, name: "Photoshop", level: 90, type: "Software", imageName: "photoshop.png" },
-    { id: 3, name: "Illustrator", level: 85, type: "Software", imageName: "illustrator.png" },
-    { id: 4, name: "After Effects", level: 80, type: "Software", imageName: "aftereffects.png" }
-  ]);
+  const [skills, setSkills] = useState([]);
 
-  const [jobs, setJobs] = useState([
-    { id: 1, role: "Lead UI/UX Designer", company: "Media Up Agency", period: "2023 - Hozirgi vaqtgacha", desc: "Loyihalarni boshqarish va dizayn tizimini shakllantirish." },
-    { id: 2, role: "Senior Graphic Designer", company: "Abutech Digital Agency", period: "2021 - 2023", desc: "Brending, logotip dizayni va marketing materiallari yaratish." }
-  ]);
+  const [jobs, setJobs] = useState([]);
 
   const [downloads, setDownloads] = useState([]);
 
   const [dashboardStats, setDashboardStats] = useState({
-    total_views: 2845,
+    total_views: 0,
     total_projects: 0,
     total_messages: 0,
     new_messages: 0,
@@ -441,7 +415,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
   const handleDeleteDownload = async (id) => {
     if (!window.confirm('Haqiqatan ham o\'chirmoqchimisiz?')) return;
     try {
-      const res = await fetch(`${window.API_BASE_URL}/api/resume-downloads/${id}/`, {
+      const res = await adminFetch(`${window.API_BASE_URL}/api/resume-downloads/${id}/`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -469,7 +443,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
     formData.append('resume_pdf', selectedResumeFile);
     
     try {
-      const res = await fetch(window.API_BASE_URL + '/api/about/', {
+      const res = await adminFetch(window.API_BASE_URL + '/api/about/', {
         method: 'POST',
         body: formData
       });
@@ -493,7 +467,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
   const handleDeleteCategory = async (id) => {
     try {
-      const res = await fetch(`${window.API_BASE_URL}/api/portfolio/categories/${id}/`, {
+      const res = await adminFetch(`${window.API_BASE_URL}/api/portfolio/categories/${id}/`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -508,7 +482,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
     e.preventDefault();
     if (!newCategoryNameUz.trim()) return;
     try {
-      const res = await fetch(window.API_BASE_URL + '/api/portfolio/categories/', {
+      const res = await adminFetch(window.API_BASE_URL + '/api/portfolio/categories/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -586,7 +560,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
   const handleDeleteProject = async (id) => {
     try {
-      const res = await fetch(`${window.API_BASE_URL}/api/portfolio/projects/${id}/`, {
+      const res = await adminFetch(`${window.API_BASE_URL}/api/portfolio/projects/${id}/`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -644,7 +618,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
         : window.API_BASE_URL + '/api/portfolio/projects/';
       const method = editingProject ? 'PATCH' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method: method,
         body: formData
       });
@@ -716,7 +690,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
   const handleDeleteJob = async (id) => {
     try {
-      const res = await fetch(`${window.API_BASE_URL}/api/experiences/${id}/`, {
+      const res = await adminFetch(`${window.API_BASE_URL}/api/experiences/${id}/`, {
         method: 'DELETE',
       });
       if (res.ok) {
@@ -751,7 +725,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
       formData.append('logo', jobForm.logo);
     }
     try {
-      const res = await fetch(window.API_BASE_URL + '/api/experiences/', {
+      const res = await adminFetch(window.API_BASE_URL + '/api/experiences/', {
         method: 'POST',
         body: formData,
       });
@@ -822,7 +796,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
 
   const handleDeleteEducation = async (id) => {
     try {
-      const res = await fetch(`${window.API_BASE_URL}/api/education/${id}/`, {
+      const res = await adminFetch(`${window.API_BASE_URL}/api/education/${id}/`, {
         method: 'DELETE',
       });
       if (res.ok) {
@@ -854,12 +828,12 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
     try {
       let res;
       if (editingEducation) {
-        res = await fetch(`${window.API_BASE_URL}/api/education/${editingEducation.id}/`, {
+        res = await adminFetch(`${window.API_BASE_URL}/api/education/${editingEducation.id}/`, {
           method: 'PATCH',
           body: formData,
         });
       } else {
-        res = await fetch(window.API_BASE_URL + '/api/education/', {
+        res = await adminFetch(window.API_BASE_URL + '/api/education/', {
           method: 'POST',
           body: formData,
         });
@@ -925,7 +899,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
       formData.append('image', aboutData.image);
     }
     try {
-      const res = await fetch(window.API_BASE_URL + '/api/about/', {
+      const res = await adminFetch(window.API_BASE_URL + '/api/about/', {
         method: 'POST',
         body: formData,
       });
@@ -1054,12 +1028,12 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
     try {
       let res;
       if (editingCert) {
-        res = await fetch(`${window.API_BASE_URL}/api/certificates/${editingCert.id}/`, {
+        res = await adminFetch(`${window.API_BASE_URL}/api/certificates/${editingCert.id}/`, {
           method: 'PATCH',
           body: formData,
         });
       } else {
-        res = await fetch(window.API_BASE_URL + '/api/certificates/', {
+        res = await adminFetch(window.API_BASE_URL + '/api/certificates/', {
           method: 'POST',
           body: formData,
         });
@@ -1095,7 +1069,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
   // Delete certificate via backend
   const handleDeleteCert = async (id) => {
     try {
-      const res = await fetch(`${window.API_BASE_URL}/api/certificates/${id}/`, {
+      const res = await adminFetch(`${window.API_BASE_URL}/api/certificates/${id}/`, {
         method: 'DELETE',
       });
       if (res.ok) {
@@ -1789,7 +1763,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                           title="Delete Skill"
                           onClick={async () => {
                             try {
-                              const res = await fetch(`${window.API_BASE_URL}/api/skills/${skill.id}/`, {
+                              const res = await adminFetch(`${window.API_BASE_URL}/api/skills/${skill.id}/`, {
                                 method: 'DELETE',
                               });
                               if (res.ok) {
@@ -1841,7 +1815,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                         className="chip-remove-btn"
                         onClick={async () => {
                           try {
-                            const res = await fetch(`${window.API_BASE_URL}/api/skills/${ps.id}/`, {
+                            const res = await adminFetch(`${window.API_BASE_URL}/api/skills/${ps.id}/`, {
                               method: 'DELETE',
                             });
                             if (res.ok) {
@@ -1899,7 +1873,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                             onClick={async () => {
                               if (st.id) {
                                 try {
-                                  const res = await fetch(`${window.API_BASE_URL}/api/traits/${st.id}/`, {
+                                  const res = await adminFetch(`${window.API_BASE_URL}/api/traits/${st.id}/`, {
                                     method: 'DELETE',
                                   });
                                   if (res.ok) {
@@ -1955,7 +1929,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                             onClick={async () => {
                               if (wk.id) {
                                 try {
-                                  const res = await fetch(`${window.API_BASE_URL}/api/traits/${wk.id}/`, {
+                                  const res = await adminFetch(`${window.API_BASE_URL}/api/traits/${wk.id}/`, {
                                     method: 'DELETE',
                                   });
                                   if (res.ok) {
@@ -2166,7 +2140,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                               title="Mark as read"
                               onClick={async () => {
                                 try {
-                                  const res = await fetch(`${window.API_BASE_URL}/api/messages/${msg.id}/`, {
+                                  const res = await adminFetch(`${window.API_BASE_URL}/api/messages/${msg.id}/`, {
                                     method: 'PATCH',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ status: 'read' })
@@ -2174,7 +2148,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                                   if (res.ok) {
                                     setMessages(messages.map(m => m.id === msg.id ? { ...m, status: 'read' } : m));
                                     // Update dashboard stats overview
-                                    const statsRes = await fetch(window.API_BASE_URL + '/api/dashboard/stats/');
+                                    const statsRes = await adminFetch(window.API_BASE_URL + '/api/dashboard/stats/');
                                     if (statsRes.ok) {
                                       const newStats = await statsRes.json();
                                       setDashboardStats(newStats);
@@ -2193,13 +2167,13 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                             title="Delete"
                             onClick={async () => {
                               try {
-                                const res = await fetch(`${window.API_BASE_URL}/api/messages/${msg.id}/`, {
+                                const res = await adminFetch(`${window.API_BASE_URL}/api/messages/${msg.id}/`, {
                                   method: 'DELETE'
                                 });
                                 if (res.ok) {
                                   setMessages(messages.filter(m => m.id !== msg.id));
                                   // Update dashboard stats overview
-                                  const statsRes = await fetch(window.API_BASE_URL + '/api/dashboard/stats/');
+                                  const statsRes = await adminFetch(window.API_BASE_URL + '/api/dashboard/stats/');
                                   if (statsRes.ok) {
                                     const newStats = await statsRes.json();
                                     setDashboardStats(newStats);
@@ -2672,7 +2646,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
                 formData.append('image', skillForm.image);
               }
               try {
-                const res = await fetch(window.API_BASE_URL + '/api/skills/', {
+                const res = await adminFetch(window.API_BASE_URL + '/api/skills/', {
                   method: 'POST',
                   body: formData,
                 });
@@ -3262,7 +3236,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               formData.append('level', 90);
               formData.append('type', 'Personal');
               try {
-                const res = await fetch(window.API_BASE_URL + '/api/skills/', {
+                const res = await adminFetch(window.API_BASE_URL + '/api/skills/', {
                   method: 'POST',
                   body: formData,
                 });
@@ -3348,7 +3322,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               e.preventDefault();
               if (!strengthForm.text_uz.trim()) return;
               try {
-                const res = await fetch(window.API_BASE_URL + '/api/traits/', {
+                const res = await adminFetch(window.API_BASE_URL + '/api/traits/', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
@@ -3442,7 +3416,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
               e.preventDefault();
               if (!weaknessForm.text_uz.trim()) return;
               try {
-                const res = await fetch(window.API_BASE_URL + '/api/traits/', {
+                const res = await adminFetch(window.API_BASE_URL + '/api/traits/', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({

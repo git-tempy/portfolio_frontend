@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LogIn, Key, User, Eye, EyeOff, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import './AdminLogin.css';
+import { saveAdminToken } from '../lib/adminApi';
 
 const localLocales = {
   UZ: {
@@ -71,7 +72,8 @@ export default function AdminLogin({ language, onLoginSuccess, onBack }) {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok && data.success && data.token) {
+        saveAdminToken(data.token);
         setSuccess(true);
         // Simulate redirection delay for rich feel
         setTimeout(() => {

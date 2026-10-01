@@ -1,3 +1,4 @@
+import { clearAdminToken, getAdminToken } from './lib/adminApi';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -26,7 +27,7 @@ export default function App() {
   const [theme,setTheme]=useState(()=>readSetting('theme','dark')==='light'?'light':'dark');
   const [route,setRoute]=useState(()=>location.pathname);
   const [search,setSearch]=useState('');
-  const [authenticated,setAuthenticated]=useState(false);
+  const [authenticated,setAuthenticated]=useState(()=>Boolean(getAdminToken()));
   const [resume,setResume]=useState(false);
   const about=useContent('/api/about/',language);
   const isAdmin=route==='/desone_adminstration';
@@ -57,7 +58,7 @@ export default function App() {
     {isAdmin&&<button className="admin-theme-toggle" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')}>{theme==='dark'?'Light mode':'Dark mode'}</button>}
     <div className="ambient-glows" aria-hidden="true"><div className="glow-orb glow-lime"/><div className="glow-orb glow-blue"/><div className="glow-orb glow-amber"/></div>
     {!isAdmin&&<Navbar view={route} language={language} setLanguage={chooseLanguage} theme={theme} toggleTheme={()=>setTheme(t=>t==='dark'?'light':'dark')} onResumeClick={()=>setResume(true)}/>}
-    {isAdmin?<Suspense fallback={<div className="page-loading" role="status">Loading…</div>}>{authenticated?<AdminDashboard language={language} onLogout={()=>{setAuthenticated(false);navigate('/');}} dbAbout={about.data} onAboutUpdate={about.retry}/>:<AdminLogin language={language} onLoginSuccess={()=>setAuthenticated(true)} onBack={()=>navigate('/')}/>}</Suspense>:<><main id="main-content">{(route==='/portfolio'||(selected&&history.state?.from?.startsWith('/portfolio?')))?<AllProjects key={search} language={language} initialSearch={search} onBack={()=>navigate('/?lang='+language)}/>:<><Hero language={language}/><AboutSection language={language} state={about}/><EducationSection language={language}/><CertificatesSection language={language}/><SkillsSection language={language}/><ExperienceSection language={language}/><Portfolio language={language} onViewAll={term=>{setSearch(term||'');navigate('/portfolio?lang='+language);}}/><Contact language={language}/></>}</main><footer className="site-footer container"><a className="brand" href="/"><span>des</span>one.</a><span>© {new Date().getFullYear()} DesOne</span><a href="#home">{language==='UZ'?'Yuqoriga':'Back to top'} ↑</a></footer></>}
+    {isAdmin?<Suspense fallback={<div className="page-loading" role="status">Loading…</div>}>{authenticated?<AdminDashboard language={language} onLogout={()=>{clearAdminToken();setAuthenticated(false);navigate('/');}} dbAbout={about.data} onAboutUpdate={about.retry}/>:<AdminLogin language={language} onLoginSuccess={()=>setAuthenticated(true)} onBack={()=>navigate('/')}/>}</Suspense>:<><main id="main-content">{(route==='/portfolio'||(selected&&history.state?.from?.startsWith('/portfolio?')))?<AllProjects key={search} language={language} initialSearch={search} onBack={()=>navigate('/?lang='+language)}/>:<><Hero language={language}/><AboutSection language={language} state={about}/><EducationSection language={language}/><CertificatesSection language={language}/><SkillsSection language={language}/><ExperienceSection language={language}/><Portfolio language={language} onViewAll={term=>{setSearch(term||'');navigate('/portfolio?lang='+language);}}/><Contact language={language}/></>}</main><footer className="site-footer container"><a className="brand" href="/"><span>des</span>one.</a><span>© {new Date().getFullYear()} DesOne</span><a href="#home">{language==='UZ'?'Yuqoriga':'Back to top'} ↑</a></footer></>}
     <Suspense fallback={<div className="page-loading" role="status">Loading viewer…</div>}>{selected&&<ProjectDetailModal key={selected} projectId={selected} language={language} onClose={closeProject}/>} {resume&&<ResumeModal language={language} aboutState={about} onClose={()=>setResume(false)}/>}</Suspense>
   </>;
 }
