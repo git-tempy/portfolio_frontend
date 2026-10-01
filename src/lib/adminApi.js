@@ -42,5 +42,8 @@ export async function adminFetch(url, options = {}) {
     clearAdminToken();
     window.location.reload();
   }
+  if (!response.ok && (!options.method || options.method === 'GET')) {
+    throw new Error(`Admin request failed (${response.status}).`);
+  }
   return response;
 }

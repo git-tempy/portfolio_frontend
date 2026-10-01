@@ -651,7 +651,7 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
         });
 
         // Also refresh categories to update count
-        fetch(window.API_BASE_URL + '/api/portfolio/categories/')
+        adminFetch(window.API_BASE_URL + '/api/portfolio/categories/')
           .then(res => res.json())
           .then(data => setCategories(data.map(item => ({ ...item, count: item.projects_count }))))
           .catch(err => console.error('Error refreshing categories:', err));
@@ -920,40 +920,40 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
   // Load certificates, skills, traits, and experiences on mount or when activeTab changes
   useEffect(() => {
     if (activeTab === 'overview') {
-      fetch(window.API_BASE_URL + '/api/dashboard/stats/')
+      adminFetch(window.API_BASE_URL + '/api/dashboard/stats/')
         .then(res => res.json())
         .then(data => setDashboardStats(data))
         .catch(err => console.error('Error loading dashboard stats:', err));
 
-      fetch(window.API_BASE_URL + '/api/messages/')
+      adminFetch(window.API_BASE_URL + '/api/messages/')
         .then(res => res.json())
         .then(data => setMessages(data))
         .catch(err => console.error('Error loading messages:', err));
 
-      fetch(window.API_BASE_URL + '/api/resume-downloads/')
+      adminFetch(window.API_BASE_URL + '/api/resume-downloads/')
         .then(res => res.json())
         .then(data => setDownloads(data))
         .catch(err => console.error('Error loading resume downloads:', err));
     }
     if (activeTab === 'messages') {
-      fetch(window.API_BASE_URL + '/api/messages/')
+      adminFetch(window.API_BASE_URL + '/api/messages/')
         .then(res => res.json())
         .then(data => setMessages(data))
         .catch(err => console.error('Error loading messages:', err));
     }
     if (activeTab === 'certificates') {
-      fetch(window.API_BASE_URL + '/api/certificates/')
+      adminFetch(window.API_BASE_URL + '/api/certificates/')
         .then(res => res.json())
         .then(data => setCerts(data))
         .catch(err => console.error('Error loading certificates:', err));
     }
     if (activeTab === 'skills') {
-      fetch(window.API_BASE_URL + '/api/skills/')
+      adminFetch(window.API_BASE_URL + '/api/skills/')
         .then(res => res.json())
         .then(data => setSkills(data))
         .catch(err => console.error('Error loading skills:', err));
 
-      fetch(window.API_BASE_URL + '/api/traits/')
+      adminFetch(window.API_BASE_URL + '/api/traits/')
         .then(res => res.json())
         .then(data => {
           setStrengths(data.filter(t => t.type === 'Strength'));
@@ -962,30 +962,30 @@ export default function AdminDashboard({ language, onLogout, dbAbout, onAboutUpd
         .catch(err => console.error('Error loading traits:', err));
     }
     if (activeTab === 'experience') {
-      fetch(window.API_BASE_URL + '/api/experiences/')
+      adminFetch(window.API_BASE_URL + '/api/experiences/')
         .then(res => res.json())
         .then(data => setJobs(data))
         .catch(err => console.error('Error loading experiences:', err));
     }
     if (activeTab === 'education') {
-      fetch(window.API_BASE_URL + '/api/education/')
+      adminFetch(window.API_BASE_URL + '/api/education/')
         .then(res => res.json())
         .then(data => setEducations(data))
         .catch(err => console.error('Error loading education:', err));
     }
     if (activeTab === 'portfolio-categories' || activeTab === 'portfolio-projects') {
-      fetch(window.API_BASE_URL + '/api/portfolio/categories/')
+      adminFetch(window.API_BASE_URL + '/api/portfolio/categories/')
         .then(res => res.json())
         .then(data => setCategories(data.map(item => ({ ...item, count: item.projects_count }))))
         .catch(err => console.error('Error loading categories:', err));
       
-      fetch(window.API_BASE_URL + '/api/portfolio/projects/')
+      adminFetch(window.API_BASE_URL + '/api/portfolio/projects/')
         .then(res => res.json())
         .then(data => setProjects(data))
         .catch(err => console.error('Error loading projects:', err));
     }
     if (activeTab === 'resume-downloads') {
-      fetch(window.API_BASE_URL + '/api/resume-downloads/')
+      adminFetch(window.API_BASE_URL + '/api/resume-downloads/')
         .then(res => res.json())
         .then(data => setDownloads(data))
         .catch(err => console.error('Error loading resume downloads:', err));
