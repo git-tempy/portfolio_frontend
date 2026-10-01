@@ -4,7 +4,7 @@ import Reveal from './Reveal';
 const heroCopy = {
  UZ:{eyebrow:'GRAFIK & DIGITAL DIZAYNER',title:['His-tuyg‘u va empatiya,','chegarasiz tafakkur —','dizaynerni AI’dan ajratib turadigan kuch.'],description:'Odamni tushunishdan boshlangan dizayn: brendda o‘ziga xoslik, interfeysda qulaylik, har bir detalda esa ma’no va maqsad bor.'},
  ENG:{eyebrow:'GRAPHIC & DIGITAL DESIGNER',title:['Emotion and empathy,','thinking without limits —','the strength that sets designers apart from AI.'],description:'Design starts with understanding people: a distinct brand, an intuitive interface, and meaning and purpose in every detail.'},
- RU:{eyebrow:'ГРАФИЧЕСКИЙ & DIGITAL-ДИЗАЙНЕР',title:['Чувства и эмпатия,','мышление без границ —','сила, отличающая дизайнера от ИИ.'],description:'Дизайн начинается с понимания людей: характер бренда, удобство интерфейса а в каждой детали — смысл и цель.'},
+ RU:{eyebrow:'ГРАФИЧЕСКИЙ & DIGITAL-ДИЗАЙНЕР',title:['Чувства и эмпатия,','мышление без границ —','сила, отличающая дизайнера от ИИ.'],description:'Дизайн начинается с понимания людей: характер бренда, удобство интерфейса, а в каждой детали — смысл и цель.'},
  JP:{eyebrow:'グラフィック＆デジタルデザイナー',title:['感性と共感、','枠にとらわれない思考。','デザイナーをAIと分かつ力。'],description:'人を理解することから始まるデザイン。ブランドには個性を、インターフェースには使いやすさを、一つひとつの細部に意味と意図を込めます。'}
 };
 export default function Hero({language}) {

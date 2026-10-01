@@ -1,5 +1,5 @@
 const key='desone-local-profile-preview';
-export const localPreviewEnabled=import.meta.env.DEV && ['127.0.0.1','localhost'].includes(location.hostname);
+export const localPreviewEnabled=import.meta.env.DEV && ['127.0.0.1','localhost'].includes(location.hostname) && localStorage.getItem('desone-preview-published')!=='true';
 function database(){return new Promise((resolve,reject)=>{
   const request=indexedDB.open('desone-local-preview',1);
   request.onupgradeneeded=()=>request.result.createObjectStore('profiles');
@@ -90,7 +90,7 @@ export async function publishLocalPreview(remoteRequest, onProgress) {
         const blob=await (await fetch(value)).blob();
         form.append(field,new File([blob],`preview.${blob.type.split('/')[1]||'bin'}`,{type:blob.type}));
       }else if(['image','logo','file','cover_image','resume_pdf'].includes(field)){
-        if(value==='')form.append(field,'');
+        if(value===''&&field==='image'&&item.imageRemoved)form.append(field,'');
       }else if(typeof value!=='object')form.append(field,String(value));
     }
     const response=await remoteRequest(window.API_BASE_URL+path,{method,body:form,remoteOnly:true});
@@ -115,5 +115,6 @@ export async function publishLocalPreview(remoteRequest, onProgress) {
     }
   }
   window.dispatchEvent(new Event('portfolio-preview-change'));
+  localStorage.setItem('desone-preview-published','true');
   return count;
 }
