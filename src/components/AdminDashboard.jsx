@@ -1248,7 +1248,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
         {/* Workspace Top Header */}
         <header className="workspace-header">
           <div className="workspace-title-section">
-<a className="admin-header-brand" href="/" aria-label="DesOne portfolio"><span className="admin-logo"><span className="brand-des">des</span><span className="brand-one">one</span></span><span className="brand-badge">ADMIN</span></a>
+<a className="admin-header-brand" href="/" aria-label="DesOne portfolio"><span className="admin-logo"><span className="brand-des">des</span><span className="brand-one">one</span></span></a>
           </div>
 
           <button 
