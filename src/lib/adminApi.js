@@ -1,3 +1,4 @@
+import { localAdminRequest } from './localPreview';
 const TOKEN_KEY = 'desone-admin-session';
 let memoryToken=null;
 export const getAdminToken = () => {try{return sessionStorage.getItem(TOKEN_KEY)||memoryToken;}catch{return memoryToken;}};
@@ -7,7 +8,7 @@ export const clearAdminToken = () => {memoryToken=null;try{sessionStorage.remove
 async function prepareForm(form, headers) {
   const data = {};
   for (const [name, value] of form.entries()) {
-    let prepared = name === 'keep_image_ids' ? JSON.parse(value) : value;
+    let prepared = name === 'keep_image_ids' ? JSON.parse(value) : name === 'level' && value === '' ? null : value;
     if (value instanceof File) {
       if (!value.size) continue;
       const response = await fetch(window.API_BASE_URL + '/api/uploads/presign/', {
@@ -30,9 +31,13 @@ async function prepareForm(form, headers) {
 }
 
 export async function adminFetch(url, options = {}) {
+  const { remoteOnly = false, ...requestOptions } = options;
+  options = requestOptions;
   const headers = new Headers(options.headers);
   const token = getAdminToken();
   if (token) headers.set('Authorization', `Bearer ${token}`);
+  const local=remoteOnly?null:await localAdminRequest(url,options,path=>fetch(window.API_BASE_URL+path,{headers}));
+  if(local)return local;
   let body = options.body;
   if (body instanceof FormData) {
     body = await prepareForm(body, headers);

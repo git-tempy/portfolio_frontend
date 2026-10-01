@@ -60,4 +60,3 @@ export default function Navbar({ language, setLanguage, theme, toggleTheme, onRe
     {open && <div className="mobile-menu-backdrop" onClick={() => setOpen(false)}><div ref={menuRef} id="mobile-navigation" className="mobile-navigation" role="dialog" aria-modal="true" aria-label="Navigation" onClick={e => e.stopPropagation()}><div className="mobile-nav-top"><span className="brand"><span>des</span>one.</span><button className="icon-button" aria-label="Close menu" onClick={() => { setOpen(false); triggerRef.current?.focus(); }}><X /></button></div><div className="mobile-links">{links}</div><button className="button button-primary" onClick={() => { setOpen(false); onResumeClick(); }}>{t.resume}<ArrowUpRight size={18} /></button></div></div>}
   </header>;
 }
-

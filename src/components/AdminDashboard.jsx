@@ -28,6 +28,7 @@ import {
 import './AdminDashboard.css';
 import { adminFetch } from '../lib/adminApi';
 import ImageUpload from './ImageUpload';
+import { localPreviewEnabled, saveLocalProfile, publishLocalPreview } from '../lib/localPreview';
 import './AdminRefresh.css';
 import AdminDialog from './AdminDialog';
 import LanguagePicker from './LanguagePicker';
@@ -216,6 +217,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
   const [activeTab, setActiveTab] = useState('overview');
   const [requestError, setRequestError] = useState('');
   useEffect(()=>{const error=event=>setRequestError(event.detail);window.addEventListener('admin-request-error',error);return()=>window.removeEventListener('admin-request-error',error);},[]);
+  const [editingAboutImage,setEditingAboutImage]=useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [savingProject, setSavingProject] = useState(false);
@@ -386,6 +388,15 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
   });
 
   const [aboutSaved, setAboutSaved] = useState(false);
+  const [publishStatus,setPublishStatus]=useState('');
+  const [publishing,setPublishing]=useState(false);
+  async function publishPreview(){
+    setPublishing(true);
+    try{const count=await publishLocalPreview(adminFetch,setPublishStatus);setPublishStatus(`${count} ta yozuv bazaga saqlandi.`);}
+    catch(error){setPublishStatus(error.message);}
+    finally{setPublishing(false);}
+  }
+  const [aboutSaving,setAboutSaving]=useState(false);
 
   useEffect(() => {
     if (dbAbout) {
@@ -400,7 +411,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
         bio_en: dbAbout.bio_en || '',
         bio_jp: dbAbout.bio_jp || '',
         image: null,
-        imageName: dbAbout.image ? dbAbout.image.split('/').pop() : ''
+        imageRemoved:false,
+        imageName: dbAbout.image ? 'Profile image' : ''
       });
     }
   }, [dbAbout]);
@@ -727,6 +739,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
   const handleJobSubmit = async (e) => {
     e.preventDefault();
+    if(uploadingCover)return;
     const period = jobForm.isCurrent ? `${jobForm.startYear} - hozir davom etyapti` : `${jobForm.startYear} - ${jobForm.endYear}`;
     const formData = new FormData();
     formData.append('role_uz', jobForm.role_uz);
@@ -833,6 +846,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
   const handleEducationSubmit = async (e) => {
     e.preventDefault();
+    if(uploadingCover)return;
     if (!educationForm.name_uz.trim()) return;
     const formData = new FormData();
     formData.append('name_uz', educationForm.name_uz.trim());
@@ -908,6 +922,15 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
   const handleAboutSubmit = async (e) => {
     e.preventDefault();
+    if(editingAboutImage||aboutSaving)return;
+    if(!aboutData.name_uz?.trim()){setRequestError(tr("Ismni kiriting","Enter your name"));return;}
+    setAboutSaving(true);setAboutSaved(false);setRequestError('');
+    if(localPreviewEnabled){
+      try{await saveLocalProfile({...aboutData,image:aboutData.imageRemoved?null:aboutData.image||dbAbout?.image});setAboutSaved(true);setTimeout(()=>setAboutSaved(false),3000);onAboutUpdate?.();}
+      catch(error){setRequestError(error.message);}
+      finally{setAboutSaving(false);}
+      return;
+    }
     const formData = new FormData();
     formData.append('name_uz', aboutData.name_uz || '');
     formData.append('name_ru', aboutData.name_ru || '');
@@ -921,7 +944,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     formData.append('bio', aboutData.bio_uz || '');
     if (aboutData.image) {
       formData.append('image', aboutData.image);
-    }
+    }else if(aboutData.imageRemoved)formData.append('image','');
     try {
       const res = await adminFetch(window.API_BASE_URL + '/api/about/', {
         method: 'POST',
@@ -934,11 +957,11 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
           onAboutUpdate();
         }
       } else {
-        console.error('Failed to update About Me data');
+        setRequestError(tr('Saqlash amalga oshmadi. Qayta urinib ko‘ring.','Save failed. Please try again.'));
       }
     } catch (err) {
-      console.error('Error updating About Me data:', err);
-    }
+      setRequestError(err.message||tr('Saqlashda xato yuz berdi','Could not save changes'));
+    }finally{setAboutSaving(false);}
   };
 
   // Load certificates, skills, traits, and experiences on mount or when activeTab changes
@@ -1034,6 +1057,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
   // Add or edit certificate via backend
   const handleCertSubmit = async (e) => {
     e.preventDefault();
+    if(uploadingCover)return;
+    if(!localPreviewEnabled&&!editingCert&&!certForm.coverImage){setRequestError(tr("Muqova rasmini tanlang","Choose a cover image"));return;}
     if (!certForm.title_uz.trim()) return;
     const formData = new FormData();
     formData.append('title_uz', certForm.title_uz.trim());
@@ -1043,8 +1068,6 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     formData.append('title', certForm.title_uz.trim());
               formData.append('organization', certForm.organization || '');
               formData.append('year', certForm.year || '');
-    formData.append('organization', '');
-    formData.append('year', new Date().getFullYear().toString());
     if (certForm.pdfFile) {
       formData.append('file', certForm.pdfFile);
     }
@@ -1498,49 +1521,22 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               <h3>{t.about.title}</h3>
               
               {aboutSaved && (
-                <div className="dashboard-success-alert-floating">
+                <div className="profile-save-status" role="status" aria-live="polite">
                   <CheckCircle2 size={16} />
                   <span>{t.about.successMsg}</span>
                 </div>
               )}
 
-              <form onSubmit={handleAboutSubmit} className="dashboard-form-editor">
+              {localPreviewEnabled&&<div className="local-profile-preview-note"><button type="button" className="submit-btn" disabled={publishing} onClick={publishPreview}>Local ma’lumotlarni bazaga ko‘chirish</button><p role="status">{publishStatus}</p></div>}
+              {localPreviewEnabled&&<p className="local-profile-preview-note">{tr("Local profil previewi — saqlash faqat shu kompyuterda ishlaydi.","Local profile preview — saves stay on this computer.")} <a href="/#about" target="_blank" rel="noopener noreferrer">{tr("Portfolioda ko‘rish","View portfolio")}</a></p>}
+              <form noValidate onSubmit={handleAboutSubmit} className="dashboard-form-editor" aria-busy={aboutSaving}>
                 {/* 1. Profile Image Upload */}
                 <div className="editor-input-group upload-input-group">
                   <label>{tr("Profil rasmi","Profile Image")}</label>
-                  <div className="custom-file-upload-wrap">
-                    <input 
-                      type="file" 
-                      id="about-image-input"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const selectedFile = e.target.files[0];
-                        if (selectedFile) {
-                          setAboutData({ 
-                            ...aboutData, 
-                            image: selectedFile, 
-                            imageName: selectedFile.name 
-                          });
-                        }
-                      }}
-                      style={{ display: 'none' }}
-                    />
-                    <button 
-                      type="button" 
-                      className="custom-upload-trigger-btn"
-                      onClick={() => document.getElementById('about-image-input').click()}
-                    >
-                      <Upload size={16} />
-                      <span>
-                        {aboutData.imageName 
-                          ? aboutData.imageName 
-                          : (tr("Profil rasmini tanlash","Choose profile image"))
-                        }
-                      </span>
-                    </button>
-                  </div>
+                  <ImageUpload kind="portrait" language={language} value={aboutData.image?[aboutData.image]:[]} existing={[aboutData.imageRemoved?null:dbAbout?.image]} onBusy={setEditingAboutImage} onChange={files=>setAboutData(data=>({...data,image:files[0]||null,imageRemoved:!files.length,imageName:files[0]?.name||''}))}/>
                 </div>
 
+                {editingAboutImage&&<p role="status" className="local-profile-preview-note">{tr("Avval rasmni tahrirlab, Qo‘llash tugmasini bosing.","Apply the image edit before saving the profile.")}</p>}
                 {/* 2. Full Name */}
                 <div className="form-row-grid-2">
                   <div className="editor-input-group">
@@ -1621,9 +1617,9 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   </div>
                 </div>
 
-                <button type="submit" className="save-form-editor-btn">
+                <button type="submit" className="save-form-editor-btn" disabled={editingAboutImage||aboutSaving}>
                   <FileText size={16} />
-                  <span>{t.about.btnSave}</span>
+                  <span>{aboutSaving?tr("Saqlanmoqda…","Saving…"):aboutSaved?tr("Saqlandi","Saved"):t.about.btnSave}</span>
                 </button>
               </form>
             </div>
@@ -1762,13 +1758,13 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <div key={skill.id} className="dashboard-skill-row-card">
                     <div className="skill-row-meta">
                       <span className="skill-row-name">{skill.name}</span>
-                      <span className="skill-row-level">{skill.level || 90}%</span>
+                      <span className="skill-row-level">{skill.level!=null&&skill.level!==''?`${skill.level}%`:''}</span>
                     </div>
                     <div className="skill-row-track">
-                      <div className="skill-row-progress" style={{ width: `${skill.level || 90}%` }}></div>
+                      <div className="skill-row-progress" style={{ width: `${skill.level ?? 0}%` }}></div>
                     </div>
                     <div className="skill-row-footer">
-                      <span className="skill-type-tag">{skill.image ? skill.image.split('/').pop() : (skill.imageName || "icon.png")}</span>
+                      <span className="skill-type-tag">{skill.image ? tr('Belgi yuklangan','Icon uploaded') : tr('Belgi qo‘shilmagan','No icon added')}</span>
                       <div className="skill-actions">
                         <button 
                           className="action-icon-btn delete-btn"
@@ -2270,7 +2266,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 }}>
                   {tr("Bekor qilish","Cancel")}
                 </button>
-                <button type="submit" className="submit-btn">
+                <button type="submit" className="submit-btn" disabled={uploadingCover}>
                   {tr("Qo'shish","Add")}
                 </button>
               </div>
@@ -2492,38 +2488,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               {/* Cover Image Upload field */}
               <div className="editor-input-group upload-input-group">
                 <label>{tr("Sertifikat muqovasi (Cover Image)","Certificate Cover Image")}</label>
-                <div className="custom-file-upload-wrap">
-                  <input 
-                    type="file" 
-                    id="cert-cover-input"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const selectedFile = e.target.files[0];
-                      if (selectedFile) {
-                        setCertForm({ 
-                          ...certForm, 
-                          coverImage: selectedFile, 
-                          coverImageName: selectedFile.name 
-                        });
-                      }
-                    }}
-                    required={!editingCert}
-                    style={{ display: 'none' }}
-                  />
-                  <button 
-                    type="button" 
-                    className="custom-upload-trigger-btn"
-                    onClick={() => document.getElementById('cert-cover-input').click()}
-                  >
-                    <Upload size={16} />
-                    <span>
-                      {certForm.coverImageName 
-                        ? certForm.coverImageName 
-                        : (tr("Muqova rasmini tanlash","Choose cover image"))
-                      }
-                    </span>
-                  </button>
-                </div>
+                <ImageUpload kind="cover" language={language} value={certForm.coverImage?[certForm.coverImage]:[]} existing={[editingCert?.image]} onBusy={setUploadingCover} onChange={files=>setCertForm(data=>({...data,coverImage:files[0]||null,coverImageName:files[0]?.name||''}))}/>
               </div>
 
               {/* Certificate Name in 4 languages */}
@@ -2590,7 +2555,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                         });
                       }
                     }}
-                    required={!editingCert}
+                    required={!localPreviewEnabled&&!editingCert}
                     style={{ display: 'none' }}
                   />
                   <button 
@@ -2627,7 +2592,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 }}>
                   {tr("Bekor qilish","Cancel")}
                 </button>
-                <button type="submit" className="submit-btn">
+                <button type="submit" className="submit-btn" disabled={uploadingCover}>
                   {editingCert ? (tr("Saqlash","Save")) : (tr("Qo'shish","Add"))}
                 </button>
               </div>
@@ -2645,14 +2610,14 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
-              if (!skillForm.name_uz.trim()) return;
+              if(uploadingCover||!skillForm.name_uz.trim()) return;
               const formData = new FormData();
               formData.append('name_uz', skillForm.name_uz.trim());
               formData.append('name_ru', skillForm.name_ru.trim());
               formData.append('name_en', skillForm.name_en.trim());
               formData.append('name_jp', skillForm.name_jp.trim());
               formData.append('name', skillForm.name_uz.trim());
-              formData.append('level', skillForm.level);
+              if(skillForm.level!=='')formData.append('level', skillForm.level);
               formData.append('type', 'Software');
               if (skillForm.image) {
                 formData.append('image', skillForm.image);
@@ -2734,46 +2699,14 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   min="0"
                   max="100"
                   value={skillForm.level}
-                  onChange={(e) => setSkillForm({ ...skillForm, level: parseInt(e.target.value) || 90 })}
-                  required
+                  onChange={(e) => setSkillForm({ ...skillForm, level: e.target.value===''?'':Number(e.target.value) })}
                 />
               </div>
 
               {/* Skill Icon Upload field */}
               <div className="editor-input-group upload-input-group">
                 <label>{tr("Ko'nikma belgisi (Icon / Image)","Skill Icon / Image")}</label>
-                <div className="custom-file-upload-wrap">
-                  <input 
-                    type="file" 
-                    id="skill-image-input"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const selectedFile = e.target.files[0];
-                      if (selectedFile) {
-                        setSkillForm({ 
-                          ...skillForm, 
-                          image: selectedFile, 
-                          imageName: selectedFile.name 
-                        });
-                      }
-                    }}
-                    required
-                    style={{ display: 'none' }}
-                  />
-                  <button 
-                    type="button" 
-                    className="custom-upload-trigger-btn"
-                    onClick={() => document.getElementById('skill-image-input').click()}
-                  >
-                    <Upload size={16} />
-                    <span>
-                      {skillForm.imageName 
-                        ? skillForm.imageName 
-                        : (tr("Rasm yuklash","Upload Image"))
-                      }
-                    </span>
-                  </button>
-                </div>
+                <ImageUpload kind="icon" language={language} value={skillForm.image?[skillForm.image]:[]} existing={[]} onBusy={setUploadingCover} onChange={files=>setSkillForm(data=>({...data,image:files[0]||null,imageRemoved:!files.length,imageName:files[0]?.name||''}))}/>
               </div>
 
               {/* Action Buttons */}
@@ -2792,7 +2725,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 }}>
                   {tr("Bekor qilish","Cancel")}
                 </button>
-                <button type="submit" className="submit-btn">
+                <button type="submit" className="submit-btn" disabled={uploadingCover}>
                   {tr("Qo'shish","Add")}
                 </button>
               </div>
@@ -2943,37 +2876,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               {/* Logo Upload field */}
               <div className="editor-input-group upload-input-group">
                 <label>{tr("Kompaniya Logotipi (Logo)","Company Logo")}</label>
-                <div className="custom-file-upload-wrap">
-                  <input 
-                    type="file" 
-                    id="job-logo-input"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const selectedFile = e.target.files[0];
-                      if (selectedFile) {
-                        setJobForm({ 
-                          ...jobForm, 
-                          logo: selectedFile, 
-                          logoName: selectedFile.name 
-                        });
-                      }
-                    }}
-                    style={{ display: 'none' }}
-                  />
-                  <button 
-                    type="button" 
-                    className="custom-upload-trigger-btn"
-                    onClick={() => document.getElementById('job-logo-input').click()}
-                  >
-                    <Upload size={16} />
-                    <span>
-                      {jobForm.logoName 
-                        ? jobForm.logoName 
-                        : (tr("Rasm yuklash (Ixtiyoriy)","Upload Image (Optional)"))
-                      }
-                    </span>
-                  </button>
-                </div>
+                <ImageUpload kind="icon" language={language} value={jobForm.logo?[jobForm.logo]:[]} existing={[]} onBusy={setUploadingCover} onChange={files=>setJobForm(data=>({...data,logo:files[0]||null,logoName:files[0]?.name||''}))}/>
               </div>
 
               {/* Description in 4 languages */}
@@ -3046,7 +2949,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 }}>
                   {tr("Bekor qilish","Cancel")}
                 </button>
-                <button type="submit" className="submit-btn">
+                <button type="submit" className="submit-btn" disabled={uploadingCover}>
                   {tr("Qo'shish","Add")}
                 </button>
               </div>
@@ -3123,37 +3026,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               {/* Logo Upload field */}
               <div className="editor-input-group upload-input-group">
                 <label>{tr("Muassasa Logotipi (Logo)","Institution Logo")}</label>
-                <div className="custom-file-upload-wrap">
-                  <input 
-                    type="file" 
-                    id="education-logo-input"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const selectedFile = e.target.files[0];
-                      if (selectedFile) {
-                        setEducationForm({ 
-                          ...educationForm, 
-                          logo: selectedFile, 
-                          logoName: selectedFile.name 
-                        });
-                      }
-                    }}
-                    style={{ display: 'none' }}
-                  />
-                  <button 
-                    type="button" 
-                    className="custom-upload-trigger-btn"
-                    onClick={() => document.getElementById('education-logo-input').click()}
-                  >
-                    <Upload size={16} />
-                    <span>
-                      {educationForm.logoName 
-                        ? educationForm.logoName 
-                        : (tr("Rasm yuklash (Ixtiyoriy)","Upload Image (Optional)"))
-                      }
-                    </span>
-                  </button>
-                </div>
+                <ImageUpload kind="icon" language={language} value={educationForm.logo?[educationForm.logo]:[]} existing={[editingEducation?.logo]} onBusy={setUploadingCover} onChange={files=>setEducationForm(data=>({...data,logo:files[0]||null,logoName:files[0]?.name||''}))}/>
               </div>
 
               {/* Description in 4 languages */}
@@ -3220,7 +3093,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 }}>
                   {tr("Bekor qilish","Cancel")}
                 </button>
-                <button type="submit" className="submit-btn">
+                <button type="submit" className="submit-btn" disabled={uploadingCover}>
                   {editingEducation ? (tr("Saqlash","Save")) : (tr("Qo'shish","Add"))}
                 </button>
               </div>
@@ -3314,7 +3187,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 }}>
                   {tr("Bekor qilish","Cancel")}
                 </button>
-                <button type="submit" className="submit-btn">
+                <button type="submit" className="submit-btn" disabled={uploadingCover}>
                   {tr("Qo'shish","Add")}
                 </button>
               </div>
@@ -3408,7 +3281,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 }}>
                   {tr("Bekor qilish","Cancel")}
                 </button>
-                <button type="submit" className="submit-btn">
+                <button type="submit" className="submit-btn" disabled={uploadingCover}>
                   {tr("Qo'shish","Add")}
                 </button>
               </div>
@@ -3502,7 +3375,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 }}>
                   {tr("Bekor qilish","Cancel")}
                 </button>
-                <button type="submit" className="submit-btn">
+                <button type="submit" className="submit-btn" disabled={uploadingCover}>
                   {tr("Qo'shish","Add")}
                 </button>
               </div>
@@ -3513,4 +3386,3 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     </div>
   );
 }
-

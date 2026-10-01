@@ -10,11 +10,11 @@ export const locales = {
       contact: "BOG'LANISH"
     },
     hero: {
-      subtitle: "IJODKOR DIZAYNER VA ART DIREKTOR",
+      subtitle: "IZLANISHDAN ILHOM OLADIGAN KREATIV DIZAYNER",
       titlePart1: "Iz qoldiradigan",
       titlePart2: "raqamli tajribalar",
       titlePart3: "yarataman",
-      description: "Men brendlar, mahsulotlar va tajribalarni boshqacha bo'lishga jur'at etadigan kelajakka qaragan kompaniyalar uchun yarataman.",
+      description: "G‘oyangizni odamlar his qiladigan va tushunadigan dizaynga aylantiraman. Brending, raqamli interfeyslar va bosma materiallarda go‘zallikni ma’no va qulaylik bilan birlashtiraman.",
       ctaPrimary: "ISHLARNI KO'RISH",
       ctaSecondary: "BOG'LANISH"
     },
@@ -142,11 +142,11 @@ export const locales = {
       contact: "CONTACT"
     },
     hero: {
-      subtitle: "CREATIVE DESIGNER & ART DIRECTOR",
+      subtitle: "A CURIOUS MIND. A CREATIVE DESIGNER.",
       titlePart1: "I create",
       titlePart2: "digital experiences",
       titlePart3: "that leave a mark",
-      description: "I build brands, products, and immersive experiences for forward-thinking companies who dare to be different.",
+      description: "I turn your ideas into design people can feel and understand. Across branding, digital interfaces and print, I bring together visual appeal, meaning and ease of use.",
       ctaPrimary: "VIEW WORKS",
       ctaSecondary: "GET IN TOUCH"
     },
@@ -274,11 +274,11 @@ export const locales = {
       contact: "СВЯЗЬ"
     },
     hero: {
-      subtitle: "КРЕАТИВНЫЙ ДИЗАЙНЕР И АРТ-ДИРЕКТОР",
+      subtitle: "КРЕАТИВНЫЙ ДИЗАЙНЕР, ВДОХНОВЛЁННЫЙ ПОЗНАНИЕМ",
       titlePart1: "Создаю",
       titlePart2: "цифровые впечатления",
       titlePart3: "оставляющие след",
-      description: "Я создаю бренды, продукты и опыт для дальновидных компаний, которые не боятся отличаться от других.",
+      description: "Превращаю ваши идеи в дизайн, который люди чувствуют и понимают. В брендинге, цифровых интерфейсах и печатных материалах соединяю эстетику, смысл и удобство.",
       ctaPrimary: "СМОТРЕТЬ РАБОТЫ",
       ctaSecondary: "СВЯЗАТЬСЯ"
     },
@@ -406,11 +406,11 @@ export const locales = {
       contact: "連絡先"
     },
     hero: {
-      subtitle: "クリエイティブデザイナー ＆ アートディレクター",
+      subtitle: "探究心から生まれる、クリエイティブデザイン",
       titlePart1: "記憶に残る",
       titlePart2: "デジタル体験を",
       titlePart3: "作り出します",
-      description: "私は、他とは違うことを恐れない、先進的な企業のためにブランド、プロダクト、そして体験を創造します。",
+      description: "あなたのアイデアを、心に届く、わかりやすいデザインへ。ブランディング、デジタルインターフェース、印刷物で、美しさと意味、使いやすさを結びつけます。",
       ctaPrimary: "実績を見る",
       ctaSecondary: "お問い合わせ"
     },
