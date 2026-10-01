@@ -30,6 +30,7 @@ import { adminFetch } from '../lib/adminApi';
 import ImageUpload from './ImageUpload';
 import './AdminRefresh.css';
 import AdminDialog from './AdminDialog';
+import LanguagePicker from './LanguagePicker';
 import { dashboardText, adminText } from '../lib/adminTranslations';
 
 const localizedDashboard = {
@@ -1115,9 +1116,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       )}
       <aside id="admin-navigation" className={`admin-sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
-          <span className="brand-des">des</span>
-          <span className="brand-one">one</span>
-          <span className="brand-badge">ADMIN</span>
+            <h1>{t.title}</h1>
+            <span className="breadcrumbs">{t.sidebar[({overview:"dashboard","portfolio-categories":"subCategory","portfolio-projects":"subProjects","resume-downloads":"resumeDownloads"})[activeTab] || activeTab]}</span>
         </div>
 
         <nav className="sidebar-nav">
@@ -1248,8 +1248,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
         {/* Workspace Top Header */}
         <header className="workspace-header">
           <div className="workspace-title-section">
-            <h1>{t.title}</h1>
-            <span className="breadcrumbs">{t.sidebar[({overview:"dashboard","portfolio-categories":"subCategory","portfolio-projects":"subProjects","resume-downloads":"resumeDownloads"})[activeTab] || activeTab]}</span>
+<a className="admin-header-brand" href="/" aria-label="DesOne portfolio"><span className="admin-logo"><span className="brand-des">des</span><span className="brand-one">one</span></span><span className="brand-badge">ADMIN</span></a>
           </div>
 
           <button 
@@ -1261,14 +1260,11 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
           </button>
 
           <div className="workspace-header-actions">
-            <select className="admin-language-select" aria-label={tr("Interfeys tili","Interface language")} value={language} onChange={e=>setLanguage(e.target.value)}>{['UZ','ENG','RU','JP'].map(code=><option key={code} value={code}>{code}</option>)}</select>
             <button className="header-action-btn" aria-label={theme==='dark'?tr('Yorug‘ rejim','Light mode'):tr('Qorong‘i rejim','Dark mode')} onClick={toggleTheme}>{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>}</button>
+            <LanguagePicker language={language} onChange={setLanguage}/>
             <button className="header-action-btn notification-bell" aria-label={t.sidebar.messages} onClick={()=>setActiveTab('messages')}><Bell size={18}/>{messages.some(message=>message.status==='new')&&<span className="bell-dot"/>}</button>
 
-            <div className="admin-profile-badge">
-              <div className="admin-avatar">A</div>
-              <span className="admin-name">{tr("Administrator","Administrator")}</span>
-            </div>
+
           </div>
         </header>
         {requestError && <div className="admin-error-banner" role="alert"><span>{requestError}</span><button type="button" aria-label={tr("Xatoni yopish","Dismiss error")} onClick={()=>setRequestError('')}><X size={18}/></button></div>}
@@ -3517,3 +3513,4 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     </div>
   );
 }
+

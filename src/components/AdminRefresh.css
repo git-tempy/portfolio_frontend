@@ -31,3 +31,15 @@
 @media(max-width:600px){.workspace-header{padding:10px 12px;gap:8px;min-height:68px}.workspace-title-section h1{font-size:16px}.breadcrumbs{font-size:9px}.workspace-header-actions .header-action-btn{width:36px;height:36px;min-width:36px}.admin-language-select{min-height:36px;width:58px}.admin-modal-overlay{padding:8px}.admin-modal-card{padding:20px;width:100%!important;max-height:94dvh}.form-row-grid-2{grid-template-columns:1fr}.project-type-toggle-group{min-width:0;gap:6px}.type-toggle-btn{min-width:0;padding:12px 6px;font-size:12px}.hashtags-dual-inputs{min-width:0}.dashboard-table-wrapper{max-width:100%}}
 @media(max-width:360px){.workspace-header-actions .notification-bell{display:none}.workspace-title-section h1{font-size:14px}}
 .admin-error-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px;border:1px solid var(--border);background:var(--glass-strong);color:var(--text-primary);overflow-wrap:anywhere}.admin-error-banner button{border:0;background:none;color:inherit;flex-shrink:0}.admin-modal-card .editor-input-group input,.admin-modal-card .editor-input-group select,.admin-modal-card .editor-input-group textarea{max-width:100%;box-sizing:border-box}.workspace-header-actions{min-width:0}
+
+/* Shared language control and relocated admin identity. */
+.sidebar-brand{flex-direction:column;align-items:flex-start;gap:4px;min-height:90px;justify-content:center;padding:20px 24px}
+.sidebar-brand h1{font-size:20px;line-height:1.3;color:var(--text-primary);margin:0;overflow-wrap:anywhere}
+.sidebar-brand .breadcrumbs{color:var(--text-secondary)}
+.admin-header-brand{display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px;text-decoration:none;width:max-content;max-width:100%}
+.admin-logo{display:flex;line-height:1;white-space:nowrap}.admin-header-brand .brand-des,.admin-header-brand .brand-one{font-size:28px}
+.admin-header-brand .brand-badge{margin:0;font-size:9px;line-height:1.2;padding:2px 7px}
+.workspace-header-actions .language-options{z-index:110;right:0}
+.workspace-header-actions .language-inline button{cursor:pointer}
+@media(max-width:600px){.admin-header-brand .brand-des,.admin-header-brand .brand-one{font-size:23px}.admin-header-brand .brand-badge{font-size:8px}.workspace-header-actions .language-picker-trigger{width:36px;height:36px;min-width:36px}}
+
