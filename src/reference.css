@@ -67,6 +67,7 @@ h1,h2,h3{font-weight:700;letter-spacing:-.02em}
 .education-row{border-radius:16px}.education-toggle{padding:24px}.education-toggle strong{font-family:var(--font-heading);font-weight:700}.education-symbol{background:#ccff3326;color:var(--primary-lime);border-radius:12px}
 .credential-card{border-radius:24px}.credential-card h3{font-size:18px}
 .credential-card .eyebrow{letter-spacing:.06em}
+.credential-card>img{display:block;width:100%;height:auto;aspect-ratio:auto;border-radius:4px;background:transparent}
 .subheading{font-size:24px;font-weight:700;margin-bottom:24px}
 .tool-grid{gap:16px}.tool-card{border-radius:16px;aspect-ratio:1;padding:16px;gap:12px;font-family:var(--font-heading);font-weight:700;font-size:14px}
 .tool-symbol{width:48px;height:48px;border:0;border-radius:12px;background:#a855f7;color:#fff;font-family:var(--font-body);font-size:18px}
