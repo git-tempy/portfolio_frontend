@@ -285,3 +285,6 @@ h1,h2,h3{font-weight:700;letter-spacing:-.02em}
 @media(max-width:1199px){.tool-grid{justify-content:start}}
 .hero-section{overflow:clip}
 body{overflow-x:clip}
+
+/* Keep contact icons and copy aligned to the left at every breakpoint. */
+.contact-links>a{justify-content:flex-start;text-align:left}

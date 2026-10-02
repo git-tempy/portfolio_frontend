@@ -9,10 +9,10 @@ import Reveal from './Reveal';
 import ExperienceProcess from './ExperienceProcess';
 
 const aboutQuote = {
- UZ: { body: 'Bugun dizaynerlar, ayniqsa frilanserlar, bir holatga ko‘p duch kelishadi: soatlab mehnat qilib yaratgan dizaynini ko‘rsatishsa, «Bu AI’da qilingan-ku», degan gapni eshitishadi. Aslida, AI — faqat vosita. U ishni tezlashtirishi va unumdorlikni oshirishi mumkin.', ending: 'lekin, hikoyani asl mohiyatini faqatgina dizayner ifodalab beradi.' },
- ENG: { body: 'Today, designers — especially freelancers — often spend hours on a design, only to hear, “This was made with AI.” AI is a tool. It can speed up the work and improve productivity.', ending: 'But only the designer can express the true essence of the story.' },
- RU: { body: 'Сегодня дизайнеры, особенно фрилансеры, часто сталкиваются с одной ситуацией: показывают работу, на которую потратили часы, и слышат: «Это же сделано в ИИ». ИИ — лишь инструмент. Он может ускорить работу и повысить продуктивность.', ending: 'Но только дизайнер может передать истинную суть истории.' },
- JP: { body: '今、デザイナー、とりわけフリーランスは、何時間もかけて制作したデザインに「AIで作ったんでしょう」と言われることがあります。AIはあくまで道具です。作業を速め、生産性を高めることはできます。', ending: 'けれど、物語の本質を表現できるのは、デザイナーだけです。' }
+ UZ: { body: 'Ayni paytda dizaynerlar, ayniqsa frilanserlar, bir holatga ko‘p duch kelishadi: soatlab mehnat qilib yaratgan dizaynini ko‘rsatishsa, «Bu AI’da qilingan-ku», degan gapni eshitishadi. Aslida, AI — faqat vosita. U ishni tezlashtirishi va unumdorlikni oshirishi mumkin.', ending: 'lekin, hikoyani asl mohiyatini faqatgina dizayner ifodalab beradi.' },
+ ENG: { body: 'Nowadays, designers — especially freelancers — often spend hours on a design, only to hear, “This was made with AI.” AI is a tool. It can speed up the work and improve productivity.', ending: 'But only the designer can express the true essence of the story.' },
+ RU: { body: 'В наши дни дизайнеры, особенно фрилансеры, часто сталкиваются с одной ситуацией: показывают работу, на которую потратили часы, и слышат: «Это же сделано в ИИ». ИИ — лишь инструмент. Он может ускорить работу и повысить продуктивность.', ending: 'Но только дизайнер может передать истинную суть истории.' },
+ JP: { body: '近年、デザイナー、とりわけフリーランスは、何時間もかけて制作したデザインに「AIで作ったんでしょう」と言われることがあります。AIはあくまで道具です。作業を速め、生産性を高めることはできます。', ending: 'けれど、物語の本質を表現できるのは、デザイナーだけです。' }
 };
 
 function SectionTitle({ index, label, title }) { return <div className="section-heading"><div><span className="eyebrow">{index} / {label}</span><h2>{title}</h2></div></div>; }
