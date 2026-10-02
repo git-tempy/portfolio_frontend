@@ -1,5 +1,5 @@
 const key='desone-local-profile-preview';
-export const localPreviewEnabled=import.meta.env.DEV && ['127.0.0.1','localhost'].includes(location.hostname) && localStorage.getItem('desone-preview-published')!=='true';
+export const localPreviewEnabled=import.meta.env.DEV && import.meta.env.VITE_LOCAL_CONTENT_PREVIEW==='true' && ['127.0.0.1','localhost'].includes(location.hostname) && localStorage.getItem('desone-preview-published')!=='true';
 function database(){return new Promise((resolve,reject)=>{
   const request=indexedDB.open('desone-local-preview',1);
   request.onupgradeneeded=()=>request.result.createObjectStore('profiles');

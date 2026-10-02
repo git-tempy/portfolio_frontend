@@ -1,0 +1,4 @@
+.journey-top{align-items:flex-start;gap:16px}.journey-top>div{min-width:0;flex:1}.experience-process{display:block;margin-top:-10px;width:148px;flex:0 0 148px;background-repeat:no-repeat;background-size:200% 200%;background-position:0 0;animation:experience-frames 2.8s steps(1,end) infinite;animation-play-state:paused}.experience-process.is-visible{animation-play-state:running}
+@keyframes experience-frames{0%,100%{background-position:0 0}25%{background-position:100% 0}50%{background-position:0 100%}75%{background-position:100% 100%}}
+@media(max-width:600px){.experience-process{width:96px;flex-basis:96px}.journey-top{gap:10px}.journey-top h3{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.experience-process{animation:none}}

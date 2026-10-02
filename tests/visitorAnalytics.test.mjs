@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {deviceIdentity,deviceType} from '../src/lib/visitorAnalytics.js';
+const memory=new Map();const storage={getItem:key=>memory.get(key),setItem:(key,value)=>memory.set(key,value)};
+const first=deviceIdentity(storage);assert.equal(deviceIdentity(storage),first);
+assert.match(first,/^[0-9a-f-]{36}$/);
+assert.equal(deviceType('Mozilla iPhone Mobile',0),'mobile');
+assert.equal(deviceType('Mozilla Android Mobile',0),'mobile');
+assert.equal(deviceType('Mozilla Android Tablet',0),'tablet');
+assert.equal(deviceType('Mozilla Macintosh',5),'tablet');
+assert.equal(deviceType('Mozilla Macintosh',0),'desktop');
+assert.equal(deviceType('Mozilla Windows NT',0),'desktop');
+console.log('Persistent device ID and 6 device classifications passed.');

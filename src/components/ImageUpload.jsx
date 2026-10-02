@@ -14,12 +14,12 @@ function FilePreview({ file }) {
   },[file]);
   return <img src={url||undefined} alt={file.name}/>;
 }
-export default function ImageUpload({ value=[],onChange,onBusy,kind='gallery',language='ENG',existing=[] }) {
+export default function ImageUpload({ value=[],onChange,onBusy,kind='gallery',language='ENG',existing=[],singleImage=false }) {
   const input=useRef(null),controller=useRef(null),sequence=useRef(0),busyCallback=useRef(onBusy);
   useEffect(()=>{busyCallback.current=onBusy;},[onBusy]);
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[progress,setProgress]=useState(''),[report,setReport]=useState(null),[drag,setDrag]=useState(false);
   const [editing,setEditing]=useState(null);
-  const single=kind!=='gallery';
+  const single=kind!=='gallery'||singleImage;
   const actionLabels=({UZ:['Almashtirish','O‘chirish'],ENG:['Replace','Delete'],RU:['Заменить','Удалить'],JP:['変更','削除']})[language]||['Replace','Delete'];
   const editLabel=({UZ:'Tahrirlash',ENG:'Edit',RU:'Редактировать',JP:'編集'})[language]||'Edit';
   const tr=(uzbek,english)=>adminText(language,uzbek,english);
@@ -41,9 +41,9 @@ export default function ImageUpload({ value=[],onChange,onBusy,kind='gallery',la
         const result=await optimizeImage(selected[i],kind,aborter.signal);
         next.push(result.file);before+=selected[i].size;after+=result.file.size;
       }
-      if(sequence.current===run){if(single){setEditing({file:next[0],index:0});}else onChange(next);setReport({before,after});}
+      if(sequence.current===run){if(single){setEditing({file:next[0],index:0});}else {setEditing({file:next[value.length],index:0,batch:next.slice(value.length),completed:[...value]});onBusy?.(true);}setReport({before,after});}
     }catch(e){if(sequence.current===run){onBusy?.(false);setError(e.name==='AbortError'?(tr("Bekor qilindi.","Cancelled. Previous selection kept.")):e.message);}}
-    finally{if(sequence.current===run){setBusy(false);if(!single||aborter.signal.aborted)onBusy?.(false);setProgress('');}if(input.current)input.current.value='';}
+    finally{if(sequence.current===run){setBusy(false);if(aborter.signal.aborted)onBusy?.(false);setProgress('');}if(input.current)input.current.value='';}
   }
   const beginEdit=(file,index)=>{setEditing({file,index});onBusy?.(true);};
   const stopEdit=()=>{setEditing(null);onBusy?.(false);};
@@ -71,10 +71,10 @@ export default function ImageUpload({ value=[],onChange,onBusy,kind='gallery',la
     {(!single||(!value.length&&!existing.some(Boolean)))&&<div className={'image-dropzone '+(drag?'dragging':'')} onDragOver={e=>{e.preventDefault();if(!busy&&!editing)setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);if(!busy&&!editing)choose(e.dataTransfer.files);}}>
       <button type="button" disabled={busy||!!editing} onClick={()=>input.current.click()}><Upload size={22}/><strong>{kind==='portrait'?(tr("Profil rasmini tanlash","Choose profile image")):kind==='icon'?(tr("Rasmni tanlash","Choose image")):single?(tr("Muqova tanlash","Choose cover")):(tr("Rasmlarni tanlash","Choose images"))}</strong><span>{tr("JPG, PNG, WebP · Avtomatik siqish","JPG, PNG, WebP · Automatically optimized")}</span></button>
     </div>}
-    {editing&&<ImageEditor key={editing.file.name+'-'+editing.index} file={editing.file} kind={kind} language={language} onCancel={stopEdit} onApply={file=>{const next=single?[file]:value.map((item,i)=>i===editing.index?file:item);onChange(next);setReport(null);stopEdit();}}/>}
+    {editing&&<ImageEditor key={editing.file.name+'-'+editing.index} file={editing.file} kind={kind} language={language} onCancel={stopEdit} onApply={file=>{if(editing.batch){const completed=[...editing.completed,file],index=editing.index+1;if(index<editing.batch.length){setEditing({...editing,file:editing.batch[index],index,completed});return;}onChange(completed);}else {const next=single?[file]:value.map((item,i)=>i===editing.index?file:item);onChange(next);}setReport(null);stopEdit();}}/>}
     {busy&&<div className="upload-progress" role="status"><span>{progress}</span><button type="button" onClick={()=>controller.current?.abort()}>{tr("Bekor qilish","Cancel")}</button></div>}
     {error&&<p className="upload-error" role="alert">{error}</p>}
     {report&&<p className="upload-report" role="status">{bytes(report.before)} → {bytes(report.after)} · {tr("Tayyor","Ready")}</p>}
-    <div className={single?"upload-previews single-image-preview":"upload-previews"}>{!value.length&&existing.filter(Boolean).map((src,i)=><div className="upload-preview" key={i}><img src={src} alt={'Current image '+(i+1)}/><small>{tr("Hozirgi rasm","Current image")}</small>{single&&<div className="single-image-actions"><button type="button" disabled={busy||!!editing} onClick={()=>editExisting(src)}><Crop size={14}/>{editLabel}</button><button type="button" disabled={busy||!!editing} onClick={()=>input.current.click()}>{actionLabels[0]}</button><button type="button" disabled={busy||!!editing} onClick={()=>onChange([])}>{actionLabels[1]}</button></div>}</div>)}{value.map((file,i)=><div className="upload-preview" key={file.name+'-'+i}><FilePreview file={file}/><small title={file.name}>{file.name}</small><small>{bytes(file.size)}</small><div className={single?"single-image-actions":undefined}><button type="button" aria-label={editLabel+" "+(i+1)} disabled={busy||!!editing} onClick={()=>beginEdit(file,i)}><Crop size={14}/>{single&&editLabel}</button>{single&&<button type="button" disabled={busy||!!editing} onClick={()=>input.current.click()}>{actionLabels[0]}</button>}{!single&&<><button type="button" aria-label={'Move image '+(i+1)+' left'} disabled={busy||!!editing||i===0} onClick={()=>move(i,-1)}><ArrowLeft size={14}/></button><button type="button" aria-label={'Move image '+(i+1)+' right'} disabled={busy||!!editing||i===value.length-1} onClick={()=>move(i,1)}><ArrowRight size={14}/></button></>}<button type="button" aria-label={'Remove image '+(i+1)} disabled={busy||!!editing} onClick={()=>onChange(value.filter((_,j)=>j!==i))}><X size={14}/>{single&&actionLabels[1]}</button></div></div>)}</div>
+    <div className={single?"upload-previews single-image-preview":"upload-previews"}>{!value.length&&existing.filter(Boolean).map((src,i)=><div className="upload-preview" key={i}><img src={src} alt={tr('Hozirgi rasm','Current image')+' '+(i+1)}/><small>{tr("Hozirgi rasm","Current image")}</small>{single&&<div className="single-image-actions"><button type="button" disabled={busy||!!editing} onClick={()=>editExisting(src)}><Crop size={14}/>{editLabel}</button><button type="button" disabled={busy||!!editing} onClick={()=>input.current.click()}>{actionLabels[0]}</button><button type="button" disabled={busy||!!editing} onClick={()=>onChange([])}>{actionLabels[1]}</button></div>}</div>)}{value.map((file,i)=><div className="upload-preview" key={file.name+'-'+i}><FilePreview file={file}/><small title={file.name}>{file.name}</small><small>{bytes(file.size)}</small><div className={single?"single-image-actions":undefined}><button type="button" aria-label={editLabel+" "+(i+1)} disabled={busy||!!editing} onClick={()=>beginEdit(file,i)}><Crop size={14}/>{single&&editLabel}</button>{single&&<button type="button" disabled={busy||!!editing} onClick={()=>input.current.click()}>{actionLabels[0]}</button>}{!single&&<><button type="button" aria-label={tr('Chapga surish','Move left')+' '+(i+1)} disabled={busy||!!editing||i===0} onClick={()=>move(i,-1)}><ArrowLeft size={14}/></button><button type="button" aria-label={tr('O‘ngga surish','Move right')+' '+(i+1)} disabled={busy||!!editing||i===value.length-1} onClick={()=>move(i,1)}><ArrowRight size={14}/></button></>}<button type="button" aria-label={actionLabels[1]+' '+(i+1)} disabled={busy||!!editing} onClick={()=>onChange(value.filter((_,j)=>j!==i))}><X size={14}/>{single&&actionLabels[1]}</button></div></div>)}</div>
   </div>;
 }

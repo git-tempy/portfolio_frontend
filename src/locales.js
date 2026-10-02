@@ -122,7 +122,7 @@ export const locales = {
       desc: "Loyihangiz haqida gaplashishni xohlaysizmi? Quyidagi forma orqali yozing.",
       fields: {
         name: "ISM",
-        email: "EMAIL",
+        email: "ELEKTRON POCHTA",
         company: "TASHKILOT",
         role: "LAVOZIM",
         message: "MUROJAAT"
@@ -386,7 +386,7 @@ export const locales = {
       desc: "Хотите обсудить проект? Напишите через форму ниже.",
       fields: {
         name: "ИМЯ",
-        email: "EMAIL",
+        email: "ЭЛЕКТРОННАЯ ПОЧТА",
         company: "КОМПАНИЯ",
         role: "ДОЛЖНОСТЬ",
         message: "ОБРАЩЕНИЕ"
@@ -399,7 +399,7 @@ export const locales = {
     nav: {
       home: "ホーム",
       about: "自己紹介",
-      education: "教育",
+      education: "学歴",
       skills: "スキル",
       experience: "職歴",
       portfolio: "ポートフォリオ",
@@ -466,7 +466,7 @@ export const locales = {
     },
     portfolio: {
       label: "/ PORTFOLIO",
-      title: "Portfolio",
+      title: "ポートフォリオ",
       viewAll: "すべて表示",
       sections: {
         recent: "最近の実績",

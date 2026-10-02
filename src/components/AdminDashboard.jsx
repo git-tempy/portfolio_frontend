@@ -1,3 +1,5 @@
+import LifeAdmin from './LifeAdmin';
+import {textFor,deviceLabel,weekdayLabel,activityLabel,activityTime} from '../lib/uiText';
 import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
@@ -66,7 +68,7 @@ const localizedDashboard = {
       title: "Men haqimda bo'limini tahrirlash",
       labelName: "Ism va Familya",
       labelRole: "Kasb / Sarlavha",
-      labelBio: "Tarjimai hol (Bio)",
+      labelBio: "Tarjimai hol ",
       btnSave: "O'zgarishlarni saqlash",
       successMsg: "Ma'lumotlar muvaffaqiyatli saqlandi!"
     },
@@ -286,6 +288,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
   // Professional Skills states
   const [showSkillModal, setShowSkillModal] = useState(false);
+  const [editingSkill, setEditingSkill] = useState(null);
   const [skillForm, setSkillForm] = useState({
     name_uz: '',
     name_ru: '',
@@ -333,6 +336,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
   // Job Modal states
   const [showJobModal, setShowJobModal] = useState(false);
+  const [editingJob,setEditingJob]=useState(null);
   const [jobForm, setJobForm] = useState({
     role_uz: '',
     role_ru: '',
@@ -646,7 +650,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     }
     if (projectForm.coverImage) {
       formData.append('cover_image', projectForm.coverImage);
-    }
+    } else if (projectForm.imageRemoved) formData.append('cover_image', '');
 
     try {
       const url = editingProject 
@@ -702,6 +706,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
   };
 
   const handleAddJob = () => {
+    setEditingJob(null);
     setJobForm({
       role_uz: '',
       role_ru: '',
@@ -722,6 +727,13 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       logoName: ''
     });
     setShowJobModal(true);
+  };
+
+  const handleEditJob = job => {
+    const years=job.period?.match(/\d{4}/g)||[];
+    const form={startYear:years[0]||'',endYear:years[1]||'',isCurrent:years.length<2,logo:null,imageRemoved:false,logoName:''};
+    for(const field of ['role','company','desc']) for(const code of ['uz','ru','en','jp']) form[field+'_'+code]=job[field+'_'+code]||job[field]||'';
+    setEditingJob(job);setJobForm(form);setShowJobModal(true);
   };
 
   const handleDeleteJob = async (id) => {
@@ -760,15 +772,15 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     formData.append('desc', jobForm.desc_uz);
     if (jobForm.logo) {
       formData.append('logo', jobForm.logo);
-    }
+    } else if (jobForm.imageRemoved) formData.append('logo', '');
     try {
-      const res = await adminFetch(window.API_BASE_URL + '/api/experiences/', {
-        method: 'POST',
+      const res = await adminFetch(window.API_BASE_URL + (editingJob?`/api/experiences/${editingJob.id}/`:'/api/experiences/'), {
+        method: editingJob?'PATCH':'POST',
         body: formData,
       });
       if (res.ok) {
         const newJob = await res.json();
-        setJobs([...jobs, newJob]);
+        setJobs(current=>editingJob?current.map(job=>job.id===newJob.id?newJob:job):[...current,newJob]);
         setShowJobModal(false);
         setJobForm({
           role_uz: '',
@@ -862,7 +874,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     formData.append('description', educationForm.description_uz.trim());
     if (educationForm.logo) {
       formData.append('logo', educationForm.logo);
-    }
+    } else if (educationForm.imageRemoved) formData.append('logo', '');
     try {
       let res;
       if (editingEducation) {
@@ -1073,7 +1085,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     }
     if (certForm.coverImage) {
       formData.append('image', certForm.coverImage);
-    }
+    } else if (certForm.imageRemoved) formData.append('image', '');
     try {
       let res;
       if (editingCert) {
@@ -1140,10 +1152,10 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       <aside id="admin-navigation" className={`admin-sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
             <h1>{t.title}</h1>
-            <span className="breadcrumbs">{t.sidebar[({overview:"dashboard","portfolio-categories":"subCategory","portfolio-projects":"subProjects","resume-downloads":"resumeDownloads"})[activeTab] || activeTab]}</span>
+            <span className="breadcrumbs">{t.sidebar[({overview:"dashboard","portfolio-categories":"subCategory","portfolio-projects":"subProjects","resume-downloads":"resumeDownloads"})[activeTab] || activeTab]|| (activeTab==='life'?textFor(language).life:'')}</span>
         </div>
 
-        <nav className="sidebar-nav">
+        <nav className="sidebar-nav"><button className={`sidebar-link ${activeTab==='life'?'active-link':''}`} onClick={()=>{setMobileSidebarOpen(false);setActiveTab('life');}}><History size={20}/><span>{textFor(language).life}</span></button>
           {/* 1. Dashboard Link */}
           <button 
             className={`sidebar-link ${activeTab === 'overview' ? 'active-link' : ''}`}
@@ -1293,7 +1305,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
         {requestError && <div className="admin-error-banner" role="alert"><span>{requestError}</span><button type="button" aria-label={tr("Xatoni yopish","Dismiss error")} onClick={()=>setRequestError('')}><X size={18}/></button></div>}
 
         {/* Dynamic Panel Content */}
-        <div className="workspace-content">
+        <div className="workspace-content">{activeTab==='life'&&<LifeAdmin language={language}/>}
           
           {/* 1. DASHBOARD OVERVIEW */}
           {activeTab === 'overview' && (
@@ -1365,7 +1377,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                             return (
                               <div className="chart-column" key={index}>
                                 <div className="chart-fill" style={{ height: `${pct}%` }} title={`${d.count} views`}></div>
-                                <span className="chart-day">{d.day}</span>
+                                <span className="chart-day">{weekdayLabel(d.day,language)}</span>
                               </div>
                             );
                           });
@@ -1374,7 +1386,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                         ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
                           <div className="chart-column" key={day}>
                             <div className="chart-fill" style={{ height: '0%' }}></div>
-                            <span className="chart-day">{day}</span>
+                            <span className="chart-day">{weekdayLabel(day,language)}</span>
                           </div>
                         ))
                       )}
@@ -1382,6 +1394,11 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   </div>
                 </div>
 
+                <div className="dashboard-devices-box glass-panel">
+                  <h3>{({UZ:'Tashrif buyurgan qurilmalar',RU:'Устройства посетителей',ENG:'Visitor devices',JP:'訪問者のデバイス'})[language]}</h3>
+                  <div className="device-summary">{['mobile','tablet','desktop'].map(type=><span key={type}>{deviceLabel(type,language)} <strong>{dashboardStats.device_summary?.find(item=>item.device_type===type)?.count||0}</strong></span>)}</div>
+                  {dashboardStats.visitor_devices?.length>0?<div className="device-table-scroll"><table className="device-table"><thead><tr><th>ID</th><th>{({UZ:'Qurilma',RU:'Устройство',ENG:'Device',JP:'デバイス'})[language]}</th><th>{({UZ:'Tashriflar',RU:'Посещения',ENG:'Visits',JP:'訪問回数'})[language]}</th><th>{({UZ:'Oxirgi tashrif',RU:'Последний визит',ENG:'Last visit',JP:'最終訪問'})[language]}</th></tr></thead><tbody>{dashboardStats.visitor_devices.map(item=><tr key={item.device_id}><td><code title={item.device_id}>{item.device_id}</code></td><td>{deviceLabel(item.device_type,language)}</td><td>{item.visits}</td><td>{new Date(item.last_seen).toLocaleString(({UZ:'uz',RU:'ru',ENG:'en',JP:'ja'})[language])}</td></tr>)}</tbody></table></div>:<p>{({UZ:'Hali qurilma tashriflari qayd etilmagan.',RU:'Посещения устройств пока не зарегистрированы.',ENG:'No device visits recorded yet.',JP:'デバイスの訪問記録はまだありません。'})[language]}</p>}
+                </div>
                 {/* Recent Activities */}
                 <div className="dashboard-activities-box glass-panel">
                   <h3>{t.overview.recentActivity}</h3>
@@ -1391,8 +1408,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                         <li key={index}>
                           <div className={`activity-dot ${act.dot_class}`}></div>
                           <div className="activity-info">
-                            <p>{act.message}</p>
-                            <span className="activity-time">{act.time}</span>
+                            <p>{activityLabel(act,language)}</p>
+                            <span className="activity-time">{activityTime(act,language)}</span>
                           </div>
                         </li>
                       ))
@@ -1443,12 +1460,12 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                           <span className="status-badge status-badge-new">{cat.status}</span>
                         </td>
                         <td className="col-actions">
-                          <button className="action-icon-btn edit-btn" title="Edit">
+                          <button className="action-icon-btn edit-btn" title={tr("Tahrirlash","Edit")}>
                             <Edit2 size={14} />
                           </button>
                           <button 
                             className="action-icon-btn delete-btn" 
-                            title="Delete"
+                            title={tr("O‘chirish","Delete")}
                             onClick={() => handleDeleteCategory(cat.id)}
                           >
                             <Trash2 size={14} />
@@ -1490,18 +1507,18 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                         <td className="col-id">#{idx + 1}</td>
                         <td className="col-title">{proj.title}</td>
                         <td className="col-cat"><span className="category-tag-badge">{proj.category}</span></td>
-                        <td className="col-type">{proj.type}</td>
+                        <td className="col-type">{proj.type==='pdf'?'PDF':textFor(language).image}</td>
                         <td className="col-actions">
                           <button 
                             className="action-icon-btn edit-btn" 
-                            title="Edit"
+                            title={tr("Tahrirlash","Edit")}
                             onClick={() => handleEditProject(proj)}
                           >
                             <Edit2 size={14} />
                           </button>
                           <button 
                             className="action-icon-btn delete-btn" 
-                            title="Delete"
+                            title={tr("O‘chirish","Delete")}
                             onClick={() => handleDeleteProject(proj.id)}
                           >
                             <Trash2 size={14} />
@@ -1527,7 +1544,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 </div>
               )}
 
-              {localPreviewEnabled&&<div className="local-profile-preview-note"><button type="button" className="submit-btn" disabled={publishing} onClick={publishPreview}>Local ma’lumotlarni bazaga ko‘chirish</button><p role="status">{publishStatus}</p></div>}
+              {localPreviewEnabled&&<div className="local-profile-preview-note"><button type="button" className="submit-btn" disabled={publishing} onClick={publishPreview}>{tr("Local ma’lumotlarni bazaga ko‘chirish","Publish local content to database")}</button><p role="status">{publishStatus}</p></div>}
               {localPreviewEnabled&&<p className="local-profile-preview-note">{tr("Local profil previewi — saqlash faqat shu kompyuterda ishlaydi.","Local profile preview — saves stay on this computer.")} <a href="/#about" target="_blank" rel="noopener noreferrer">{tr("Portfolioda ko‘rish","View portfolio")}</a></p>}
               <form noValidate onSubmit={handleAboutSubmit} className="dashboard-form-editor" aria-busy={aboutSaving}>
                 {/* 1. Profile Image Upload */}
@@ -1580,7 +1597,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 {/* 3. Biography */}
                 <div className="form-row-grid-2">
                   <div className="editor-input-group">
-                    <label>UZ {tr("Tarjimai hol (Bio)","Biography (Bio)")}</label>
+                    <label>UZ {tr("Tarjimai hol ","Biography (Bio)")}</label>
                     <textarea 
                       rows={4}
                       value={aboutData.bio_uz || ''}
@@ -1589,7 +1606,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                     />
                   </div>
                   <div className="editor-input-group">
-                    <label>RU {tr("Tarjimai hol (Bio)","Biography (Bio)")}</label>
+                    <label>RU {tr("Tarjimai hol ","Biography (Bio)")}</label>
                     <textarea 
                       rows={4}
                       value={aboutData.bio_ru || ''}
@@ -1600,7 +1617,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
                 <div className="form-row-grid-2">
                   <div className="editor-input-group">
-                    <label>ENG {tr("Tarjimai hol (Bio)","Biography (Bio)")}</label>
+                    <label>ENG {tr("Tarjimai hol ","Biography (Bio)")}</label>
                     <textarea 
                       rows={4}
                       value={aboutData.bio_en || ''}
@@ -1608,7 +1625,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                     />
                   </div>
                   <div className="editor-input-group">
-                    <label>JP {tr("Tarjimai hol (Bio)","Biography (Bio)")}</label>
+                    <label>JP {tr("Tarjimai hol ","Biography (Bio)")}</label>
                     <textarea 
                       rows={4}
                       value={aboutData.bio_jp || ''}
@@ -1641,7 +1658,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <thead>
                     <tr>
                       <th>ID</th>
-                      <th>Logo</th>
+                      <th>{tr("Logo","Logo")}</th>
                       <th>{t.education.colName}</th>
                       <th>{t.education.colPeriod}</th>
                       <th style={{ textAlign: 'right' }}>{t.education.colActions}</th>
@@ -1655,7 +1672,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                           {item.logo ? (
                             <img src={item.logo} alt="Logo" className="table-img-preview" style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '4px' }} />
                           ) : (
-                            <span className="no-image-placeholder">No Logo</span>
+                            <span className="no-image-placeholder">{tr("No Logo","No Logo")}</span>
                           )}
                         </td>
                         <td className="col-title">{item.name}</td>
@@ -1663,14 +1680,14 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                         <td className="col-actions">
                           <button 
                             className="action-icon-btn edit-btn" 
-                            title="Edit"
+                            title={tr("Tahrirlash","Edit")}
                             onClick={() => handleEditEducation(item)}
                           >
                             <Edit2 size={14} />
                           </button>
                           <button 
                             className="action-icon-btn delete-btn" 
-                            title="Delete"
+                            title={tr("O‘chirish","Delete")}
                             onClick={() => handleDeleteEducation(item.id)}
                           >
                             <Trash2 size={14} />
@@ -1716,14 +1733,14 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                         <td className="col-actions">
                           <button 
                             className="action-icon-btn edit-btn" 
-                            title="Edit"
+                            title={tr("Tahrirlash","Edit")}
                             onClick={() => handleEditCert(cert)}
                           >
                             <Edit2 size={14} />
                           </button>
                           <button 
                             className="action-icon-btn delete-btn" 
-                            title="Delete"
+                            title={tr("O‘chirish","Delete")}
                             onClick={() => handleDeleteCert(cert.id)}
                           >
                             <Trash2 size={14} />
@@ -1744,7 +1761,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               <div className="panel-toolbar-header">
                 <h3>{tr("Kasbiy ko'nikmalar (Software Skills)","Professional Software Skills")}</h3>
                 <button className="add-item-btn" onClick={() => {
-                  setSkillForm({ name: '', level: 90, image: null, imageName: '' });
+                  setEditingSkill(null);
+                  setSkillForm({ name_uz: '', name_ru: '', name_en: '', name_jp: '', level: 90, image: null, imageName: '' });
                   setShowSkillModal(true);
                 }}>
                   <Plus size={16} />
@@ -1766,6 +1784,11 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                     <div className="skill-row-footer">
                       <span className="skill-type-tag">{skill.image ? tr('Belgi yuklangan','Icon uploaded') : tr('Belgi qo‘shilmagan','No icon added')}</span>
                       <div className="skill-actions">
+                        <button className="action-icon-btn" title={tr('Tahrirlash','Edit')} onClick={() => {
+                          setEditingSkill(skill);
+                          setSkillForm({name_uz:skill.name_uz||skill.name||'',name_ru:skill.name_ru||'',name_en:skill.name_en||'',name_jp:skill.name_jp||'',level:skill.level??'',image:null,imageRemoved:false,imageName:''});
+                          setShowSkillModal(true);
+                        }}><Edit2 size={12}/></button>
                         <button 
                           className="action-icon-btn delete-btn"
                           style={{ margin: 0 }}
@@ -1965,10 +1988,10 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
           {activeTab === 'experience' && (
             <div className="experience-tab-content glass-panel">
               <div className="panel-toolbar-header">
-                <h3>Ish tajribasi bo'limi</h3>
+                <h3>{tr("Ish tajribasi bo'limi","Work Experience")}</h3>
                 <button className="add-item-btn" onClick={handleAddJob}>
                   <Plus size={16} />
-                  <span>Yangi tajriba qo'shish</span>
+                  <span>{tr("Yangi tajriba qo'shish","Add Work Experience")}</span>
                 </button>
               </div>
 
@@ -1977,10 +2000,10 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <thead>
                     <tr>
                       <th>ID</th>
-                      <th>Lavozim</th>
-                      <th>Kompaniya</th>
-                      <th>Davr</th>
-                      <th style={{ textAlign: 'right' }}>Amallar</th>
+                      <th>{tr("Lavozim","Job Title")}</th>
+                      <th>{tr("Kompaniya","Company")}</th>
+                      <th>{tr("Davr","Period")}</th>
+                      <th style={{ textAlign: 'right' }}>{tr("Amallar","Actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1991,12 +2014,12 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                         <td className="col-cat">{job.company}</td>
                         <td className="col-type">{job.period}</td>
                         <td className="col-actions">
-                          <button className="action-icon-btn edit-btn" title="Edit">
+                          <button className="action-icon-btn edit-btn" title={tr("Tahrirlash","Edit")} onClick={()=>handleEditJob(job)}>
                             <Edit2 size={14} />
                           </button>
                           <button 
                             className="action-icon-btn delete-btn" 
-                            title="Delete"
+                            title={tr("O‘chirish","Delete")}
                             onClick={() => handleDeleteJob(job.id)}
                           >
                             <Trash2 size={14} />
@@ -2019,7 +2042,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-heading)' }}>
                   <FileText size={18} style={{ color: 'var(--primary-lime)' }} />
-                  <span>Asosiy Rezyume (PDF) yuklash</span>
+                  <span>{tr("Asosiy Rezyume (PDF) yuklash","Upload r\u00e9sum\u00e9 PDF")}</span>
                 </h4>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '1.25rem', lineHeight: '1.5' }}>
                   Ushbu PDF fayl portfolio asosiy sahifasidagi "Resume" tugmasi bosilganda ochiladi va foydalanuvchilar tomonidan yuklab olinadi.
@@ -2039,7 +2062,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                     disabled={isUploadingResume}
                   >
                     <Upload size={14} />
-                    <span>Faylni tanlash</span>
+                    <span>{tr("Faylni tanlash","Choose file")}</span>
                   </button>
                   {selectedResumeFile && (
                     <span style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontFamily: 'monospace' }}>
@@ -2060,7 +2083,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 {/* Display Current Resume Link if exists */}
                 {dbAbout?.resume_pdf && (
                   <div style={{ marginTop: '1rem', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ color: 'var(--text-secondary)' }}>Hozirgi yuklangan rezyume:</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>{tr("Hozirgi yuklangan rezyume:","Current r\u00e9sum\u00e9:")}</span>
                     <a 
                       href={dbAbout.resume_pdf} 
                       target="_blank" 
@@ -2126,7 +2149,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                       <th>{t.messages.colRole}</th>
                       <th>{t.messages.colMessage}</th>
                       <th>{t.messages.colStatus}</th>
-                      <th style={{ textAlign: 'right' }}>Amallar</th>
+                      <th style={{ textAlign: 'right' }}>{tr("Amallar","Actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2173,7 +2196,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                           )}
                           <button 
                             className="action-icon-btn delete-btn" 
-                            title="Delete"
+                            title={tr("O‘chirish","Delete")}
                             onClick={async () => {
                               try {
                                 const res = await adminFetch(`${window.API_BASE_URL}/api/messages/${msg.id}/`, {
@@ -2219,7 +2242,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>UZ {tr("Kategoriya nomi","Category Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="Masalan: Veb-saytlar"
+                    placeholder={textFor(language).enterText}
                     value={newCategoryNameUz}
                     onChange={(e) => setNewCategoryNameUz(e.target.value)}
                     required
@@ -2230,7 +2253,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>RU {tr("Kategoriya nomi","Category Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="Например: Веб-сайты"
+                    placeholder={textFor(language).enterText}
                     value={newCategoryNameRu}
                     onChange={(e) => setNewCategoryNameRu(e.target.value)}
                   />
@@ -2241,7 +2264,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>ENG {tr("Kategoriya nomi","Category Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="e.g. Web Sites"
+                    placeholder={textFor(language).enterText}
                     value={newCategoryNameEn}
                     onChange={(e) => setNewCategoryNameEn(e.target.value)}
                   />
@@ -2250,7 +2273,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>JP {tr("Kategoriya nomi","Category Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="例：ウェブサイト"
+                    placeholder={textFor(language).enterText}
                     value={newCategoryNameJp}
                     onChange={(e) => setNewCategoryNameJp(e.target.value)}
                   />
@@ -2290,7 +2313,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>UZ {tr("Loyiha nomi","Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="Loyiha nomini o'zbekcha kiriting"
+                    placeholder={textFor(language).enterText}
                     value={projectForm.title_uz}
                     onChange={(e) => setProjectForm({ ...projectForm, title_uz: e.target.value })}
                     required
@@ -2301,7 +2324,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>RU {tr("Loyiha nomi","Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="Введите название проекта на русском"
+                    placeholder={textFor(language).enterText}
                     value={projectForm.title_ru}
                     onChange={(e) => setProjectForm({ ...projectForm, title_ru: e.target.value })}
                   />
@@ -2312,7 +2335,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>ENG {tr("Loyiha nomi","Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="Enter project title in English"
+                    placeholder={textFor(language).enterText}
                     value={projectForm.title_en}
                     onChange={(e) => setProjectForm({ ...projectForm, title_en: e.target.value })}
                   />
@@ -2321,7 +2344,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>JP {tr("Loyiha nomi","Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="日本語でプロジェクト名を入力してください"
+                    placeholder={textFor(language).enterText}
                     value={projectForm.title_jp}
                     onChange={(e) => setProjectForm({ ...projectForm, title_jp: e.target.value })}
                   />
@@ -2364,12 +2387,12 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               <div className="editor-input-group upload-input-group">
                 <label>{projectForm.type === 'pdf' ? tr('PDF hujjat','PDF document') : (tr("Loyiha rasmlari","Project images"))}</label>
                 {projectForm.type === 'pdf' ? <input type="file" accept="application/pdf" onChange={e => { const file=e.target.files[0]; if(file && (file.type!=='application/pdf'||file.size>25*1024*1024)){setProjectError('Choose a PDF smaller than 25 MB.');e.target.value='';return;} setProjectError('');setProjectForm(p=>({...p,file:file||null,fileName:file?.name||''})); }} /> : <ImageUpload key="gallery" value={projectForm.files||[]} language={language} onBusy={setUploadingImages} onChange={files=>setProjectForm(p=>({...p,files,fileName:files.length+' images'}))}/>}
-                {editingProject && projectForm.type==='image' && <div className="upload-previews">{(projectForm.keptImages||[]).map((image,index)=><div key={image.id} className="upload-preview"><img src={image.image} alt={'Image '+(index+1)}/><div><button type="button" aria-label={tr("Rasmni oldinga","Move image earlier")} disabled={index===0} onClick={()=>setProjectForm(form=>{const next=[...form.keptImages];[next[index-1],next[index]]=[next[index],next[index-1]];return {...form,keptImages:next};})}>←</button><button type="button" aria-label={tr("Rasmni keyinga","Move image later")} disabled={index===(projectForm.keptImages.length-1)} onClick={()=>setProjectForm(form=>{const next=[...form.keptImages];[next[index+1],next[index]]=[next[index],next[index+1]];return {...form,keptImages:next};})}>→</button><button type="button" aria-label={tr("Rasmni olib tashlash","Remove image")} onClick={()=>setProjectForm(form=>({...form,keptImages:form.keptImages.filter(item=>item.id!==image.id)}))}><X size={16}/></button></div></div>)}</div>}
+                {editingProject && projectForm.type==='image' && <div className="upload-previews">{(projectForm.keptImages||[]).map((image,index)=><div key={image.id}><button type="button" disabled={index===0} aria-label="Move image earlier" onClick={()=>setProjectForm(form=>{const keptImages=[...form.keptImages];[keptImages[index-1],keptImages[index]]=[keptImages[index],keptImages[index-1]];return {...form,keptImages};})}>←</button><button type="button" disabled={index===(projectForm.keptImages||[]).length-1} aria-label="Move image later" onClick={()=>setProjectForm(form=>{const keptImages=[...form.keptImages];[keptImages[index+1],keptImages[index]]=[keptImages[index],keptImages[index+1]];return {...form,keptImages};})}>→</button><ImageUpload key={image.id} kind="gallery" singleImage language={language} existing={[image.image]} onBusy={setUploadingImages} onChange={files=>setProjectForm(form=>({...form,keptImages:form.keptImages.filter(item=>item.id!==image.id),files:[...(form.files||[]),...files]}))}/></div>)}</div>}
 
               </div>
               <div className="editor-input-group upload-input-group">
                 <label>{tr("Loyiha muqovasi","Cover image")}</label>
-                <ImageUpload kind="cover" language={language} value={projectForm.coverImage?[projectForm.coverImage]:[]} existing={[editingProject?.cover_image]} onBusy={setUploadingCover} onChange={files=>setProjectForm(p=>({...p,coverImage:files[0]||null,coverImageName:files[0]?.name||''}))}/>
+                <ImageUpload kind="cover" language={language} value={projectForm.coverImage?[projectForm.coverImage]:[]} existing={[projectForm.imageRemoved?null:editingProject?.cover_image]} onBusy={setUploadingCover} onChange={files=>setProjectForm(p=>({...p,coverImage:files[0]||null,imageRemoved:!files.length,coverImageName:files[0]?.name||''}))}/>
               </div>
               {projectError && <p className="upload-error" role="alert">{projectError}</p>}
 
@@ -2379,7 +2402,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>UZ {tr("Tavsif","Description")}</label>
                   <textarea 
                     rows={2}
-                    placeholder="Loyiha tavsifini o'zbekcha yozing..."
+                    placeholder={textFor(language).enterText}
                     value={projectForm.description_uz}
                     onChange={(e) => setProjectForm({ ...projectForm, description_uz: e.target.value })}
                     required
@@ -2389,7 +2412,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>RU {tr("Tavsif","Description")}</label>
                   <textarea 
                     rows={2}
-                    placeholder="Описание проекта на русском..."
+                    placeholder={textFor(language).enterText}
                     value={projectForm.description_ru}
                     onChange={(e) => setProjectForm({ ...projectForm, description_ru: e.target.value })}
                   />
@@ -2400,7 +2423,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>ENG {tr("Tavsif","Description")}</label>
                   <textarea 
                     rows={2}
-                    placeholder="Project description in English..."
+                    placeholder={textFor(language).enterText}
                     value={projectForm.description_en}
                     onChange={(e) => setProjectForm({ ...projectForm, description_en: e.target.value })}
                   />
@@ -2409,7 +2432,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>JP {tr("Tavsif","Description")}</label>
                   <textarea 
                     rows={2}
-                    placeholder="日本語のプロジェクト説明..."
+                    placeholder={textFor(language).enterText}
                     value={projectForm.description_jp}
                     onChange={(e) => setProjectForm({ ...projectForm, description_jp: e.target.value })}
                   />
@@ -2488,7 +2511,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               {/* Cover Image Upload field */}
               <div className="editor-input-group upload-input-group">
                 <label>{tr("Sertifikat muqovasi (Cover Image)","Certificate Cover Image")}</label>
-                <ImageUpload kind="cover" language={language} value={certForm.coverImage?[certForm.coverImage]:[]} existing={[editingCert?.image]} onBusy={setUploadingCover} onChange={files=>setCertForm(data=>({...data,coverImage:files[0]||null,coverImageName:files[0]?.name||''}))}/>
+                <ImageUpload kind="cover" language={language} value={certForm.coverImage?[certForm.coverImage]:[]} existing={[certForm.imageRemoved?null:editingCert?.image]} onBusy={setUploadingCover} onChange={files=>setCertForm(data=>({...data,coverImage:files[0]||null,imageRemoved:!files.length,coverImageName:files[0]?.name||''}))}/>
               </div>
 
               {/* Certificate Name in 4 languages */}
@@ -2497,7 +2520,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>UZ {tr("Sertifikat nomi","Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="Sertifikat nomini o'zbekcha kiriting"
+                    placeholder={textFor(language).enterText}
                     value={certForm.title_uz || ''}
                     onChange={(e) => setCertForm({ ...certForm, title_uz: e.target.value })}
                     required
@@ -2508,7 +2531,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>RU {tr("Sertifikat nomi","Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="Введите название сертификата на русском"
+                    placeholder={textFor(language).enterText}
                     value={certForm.title_ru || ''}
                     onChange={(e) => setCertForm({ ...certForm, title_ru: e.target.value })}
                   />
@@ -2520,7 +2543,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>ENG {tr("Sertifikat nomi","Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="Enter certificate name in English"
+                    placeholder={textFor(language).enterText}
                     value={certForm.title_en || ''}
                     onChange={(e) => setCertForm({ ...certForm, title_en: e.target.value })}
                   />
@@ -2529,7 +2552,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>JP {tr("Sertifikat nomi","Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="日本語で証明書名を入力してください"
+                    placeholder={textFor(language).enterText}
                     value={certForm.title_jp || ''}
                     onChange={(e) => setCertForm({ ...certForm, title_jp: e.target.value })}
                   />
@@ -2606,7 +2629,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
         <AdminDialog label={tr("Ko‘nikma","Skills")} onClose={()=>setShowSkillModal(false)}>
           <div className="admin-modal-card glass-panel alert-style-modal project-modal-card">
             <div className="admin-modal-header">
-              <h3>{tr("Yangi ko'nikma qo'shish","Add New Skill")}</h3>
+              <h3>{editingSkill?tr('Ko‘nikmani tahrirlash','Edit Skill'):tr("Yangi ko'nikma qo'shish","Add New Skill")}</h3>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
@@ -2621,15 +2644,15 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               formData.append('type', 'Software');
               if (skillForm.image) {
                 formData.append('image', skillForm.image);
-              }
+              } else if (skillForm.imageRemoved) formData.append('image', '');
               try {
-                const res = await adminFetch(window.API_BASE_URL + '/api/skills/', {
-                  method: 'POST',
+                const res = await adminFetch(window.API_BASE_URL + (editingSkill?`/api/skills/${editingSkill.id}/`:'/api/skills/'), {
+                  method: editingSkill?'PATCH':'POST',
                   body: formData,
                 });
                 if (res.ok) {
                   const data = await res.json();
-                  setSkills([...skills, data]);
+                  setSkills(current=>editingSkill?current.map(item=>item.id===data.id?data:item):[...current,data]);
                   setShowSkillModal(false);
                   setSkillForm({
                     name_uz: '',
@@ -2652,7 +2675,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>UZ {tr("Ko'nikma nomi","Skill Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="Ko'nikma nomini o'zbekcha kiriting"
+                    placeholder={textFor(language).enterText}
                     value={skillForm.name_uz || ''}
                     onChange={(e) => setSkillForm({ ...skillForm, name_uz: e.target.value })}
                     required
@@ -2663,7 +2686,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>RU {tr("Ko'nikma nomi","Skill Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="Введите название навыка на русском"
+                    placeholder={textFor(language).enterText}
                     value={skillForm.name_ru || ''}
                     onChange={(e) => setSkillForm({ ...skillForm, name_ru: e.target.value })}
                   />
@@ -2675,7 +2698,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>ENG {tr("Ko'nikma nomi","Skill Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="Enter skill name in English"
+                    placeholder={textFor(language).enterText}
                     value={skillForm.name_en || ''}
                     onChange={(e) => setSkillForm({ ...skillForm, name_en: e.target.value })}
                   />
@@ -2684,7 +2707,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>JP {tr("Ko'nikma nomi","Skill Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="日本語でスキル名を入力してください"
+                    placeholder={textFor(language).enterText}
                     value={skillForm.name_jp || ''}
                     onChange={(e) => setSkillForm({ ...skillForm, name_jp: e.target.value })}
                   />
@@ -2706,7 +2729,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               {/* Skill Icon Upload field */}
               <div className="editor-input-group upload-input-group">
                 <label>{tr("Ko'nikma belgisi (Icon / Image)","Skill Icon / Image")}</label>
-                <ImageUpload kind="icon" language={language} value={skillForm.image?[skillForm.image]:[]} existing={[]} onBusy={setUploadingCover} onChange={files=>setSkillForm(data=>({...data,image:files[0]||null,imageRemoved:!files.length,imageName:files[0]?.name||''}))}/>
+                <ImageUpload kind="icon" language={language} value={skillForm.image?[skillForm.image]:[]} existing={[skillForm.imageRemoved?null:editingSkill?.image]} onBusy={setUploadingCover} onChange={files=>setSkillForm(data=>({...data,image:files[0]||null,imageRemoved:!files.length,imageName:files[0]?.name||''}))}/>
               </div>
 
               {/* Action Buttons */}
@@ -2726,7 +2749,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   {tr("Bekor qilish","Cancel")}
                 </button>
                 <button type="submit" className="submit-btn" disabled={uploadingCover}>
-                  {tr("Qo'shish","Add")}
+                  {editingSkill?tr("Saqlash","Save"):tr("Qo'shish","Add")}
                 </button>
               </div>
             </form>
@@ -2739,7 +2762,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
         <AdminDialog label={tr("Ish tajribasi","Work Experience")} onClose={()=>setShowJobModal(false)}>
           <div className="admin-modal-card glass-panel project-modal-card">
             <div className="admin-modal-header">
-              <h3>{tr("Yangi ish tajribasi qo'shish","Add Work Experience")}</h3>
+              <h3>{editingJob?tr("Ish tajribasini tahrirlash","Edit Work Experience"):tr("Yangi ish tajribasi qo'shish","Add Work Experience")}</h3>
             </div>
             <form onSubmit={handleJobSubmit} className="admin-modal-form">
               
@@ -2788,20 +2811,20 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               {/* Role Title in 4 languages */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>UZ {tr("Lavozim nomi (Role)","Job Title")}</label>
+                  <label>UZ {tr("Lavozim nomi ","Job Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="Lavozim nomini o'zbekcha kiriting"
+                    placeholder={textFor(language).enterText}
                     value={jobForm.role_uz || ''}
                     onChange={(e) => setJobForm({ ...jobForm, role_uz: e.target.value })}
                     required
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>RU {tr("Lavozim nomi (Role)","Job Title")}</label>
+                  <label>RU {tr("Lavozim nomi ","Job Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="Название должности на русском"
+                    placeholder={textFor(language).enterText}
                     value={jobForm.role_ru || ''}
                     onChange={(e) => setJobForm({ ...jobForm, role_ru: e.target.value })}
                   />
@@ -2810,19 +2833,19 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>ENG {tr("Lavozim nomi (Role)","Job Title")}</label>
+                  <label>ENG {tr("Lavozim nomi ","Job Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="Job title in English"
+                    placeholder={textFor(language).enterText}
                     value={jobForm.role_en || ''}
                     onChange={(e) => setJobForm({ ...jobForm, role_en: e.target.value })}
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>JP {tr("Lavozim nomi (Role)","Job Title")}</label>
+                  <label>JP {tr("Lavozim nomi ","Job Title")}</label>
                   <input 
                     type="text" 
-                    placeholder="日本語で職位名を入力してください"
+                    placeholder={textFor(language).enterText}
                     value={jobForm.role_jp || ''}
                     onChange={(e) => setJobForm({ ...jobForm, role_jp: e.target.value })}
                   />
@@ -2835,7 +2858,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>UZ {tr("Kompaniya nomi (Company)","Organization")}</label>
                   <input 
                     type="text" 
-                    placeholder="Kompaniya nomini o'zbekcha kiriting"
+                    placeholder={textFor(language).enterText}
                     value={jobForm.company_uz || ''}
                     onChange={(e) => setJobForm({ ...jobForm, company_uz: e.target.value })}
                     required
@@ -2845,7 +2868,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>RU {tr("Kompaniya nomi (Company)","Organization")}</label>
                   <input 
                     type="text" 
-                    placeholder="Название компании на русском"
+                    placeholder={textFor(language).enterText}
                     value={jobForm.company_ru || ''}
                     onChange={(e) => setJobForm({ ...jobForm, company_ru: e.target.value })}
                   />
@@ -2857,7 +2880,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>ENG {tr("Kompaniya nomi (Company)","Organization")}</label>
                   <input 
                     type="text" 
-                    placeholder="Company name in English"
+                    placeholder={textFor(language).enterText}
                     value={jobForm.company_en || ''}
                     onChange={(e) => setJobForm({ ...jobForm, company_en: e.target.value })}
                   />
@@ -2866,7 +2889,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>JP {tr("Kompaniya nomi (Company)","Organization")}</label>
                   <input 
                     type="text" 
-                    placeholder="日本語で会社名を入力してください"
+                    placeholder={textFor(language).enterText}
                     value={jobForm.company_jp || ''}
                     onChange={(e) => setJobForm({ ...jobForm, company_jp: e.target.value })}
                   />
@@ -2875,27 +2898,27 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
               {/* Logo Upload field */}
               <div className="editor-input-group upload-input-group">
-                <label>{tr("Kompaniya Logotipi (Logo)","Company Logo")}</label>
-                <ImageUpload kind="icon" language={language} value={jobForm.logo?[jobForm.logo]:[]} existing={[]} onBusy={setUploadingCover} onChange={files=>setJobForm(data=>({...data,logo:files[0]||null,logoName:files[0]?.name||''}))}/>
+                <label>{tr("Kompaniya Logotipi ","Company Logo")}</label>
+                <ImageUpload kind="icon" language={language} value={jobForm.logo?[jobForm.logo]:[]} existing={[jobForm.imageRemoved?null:editingJob?.logo]} onBusy={setUploadingCover} onChange={files=>setJobForm(data=>({...data,logo:files[0]||null,imageRemoved:!files.length,logoName:files[0]?.name||''}))}/>
               </div>
 
               {/* Description in 4 languages */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>UZ {tr("Batafsil tavsif (Description)","Description")}</label>
+                  <label>UZ {tr("Batafsil tavsif ","Description")}</label>
                   <textarea 
                     rows={3}
-                    placeholder="Batafsil tavsifni o'zbekcha yozing..."
+                    placeholder={textFor(language).enterText}
                     value={jobForm.desc_uz || ''}
                     onChange={(e) => setJobForm({ ...jobForm, desc_uz: e.target.value })}
                     required
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>RU {tr("Batafsil tavsif (Description)","Description")}</label>
+                  <label>RU {tr("Batafsil tavsif ","Description")}</label>
                   <textarea 
                     rows={3}
-                    placeholder="Описание обязанностей на русском..."
+                    placeholder={textFor(language).enterText}
                     value={jobForm.desc_ru || ''}
                     onChange={(e) => setJobForm({ ...jobForm, desc_ru: e.target.value })}
                   />
@@ -2904,19 +2927,19 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>ENG {tr("Batafsil tavsif (Description)","Description")}</label>
+                  <label>ENG {tr("Batafsil tavsif ","Description")}</label>
                   <textarea 
                     rows={3}
-                    placeholder="Detailed description in English..."
+                    placeholder={textFor(language).enterText}
                     value={jobForm.desc_en || ''}
                     onChange={(e) => setJobForm({ ...jobForm, desc_en: e.target.value })}
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>JP {tr("Batafsil tavsif (Description)","Description")}</label>
+                  <label>JP {tr("Batafsil tavsif ","Description")}</label>
                   <textarea 
                     rows={3}
-                    placeholder="日本語で詳しい説明を入力してください..."
+                    placeholder={textFor(language).enterText}
                     value={jobForm.desc_jp || ''}
                     onChange={(e) => setJobForm({ ...jobForm, desc_jp: e.target.value })}
                   />
@@ -2950,7 +2973,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   {tr("Bekor qilish","Cancel")}
                 </button>
                 <button type="submit" className="submit-btn" disabled={uploadingCover}>
-                  {tr("Qo'shish","Add")}
+                  {editingJob?tr("Saqlash","Save"):tr("Qo'shish","Add")}
                 </button>
               </div>
             </form>
@@ -2970,20 +2993,20 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               {/* Institution Name in 4 languages */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>UZ {tr("Muassasa nomi (Name)","Institution Name")}</label>
+                  <label>UZ {tr("Muassasa nomi ","Institution Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="Muassasa nomini o'zbekcha kiriting"
+                    placeholder={textFor(language).enterText}
                     value={educationForm.name_uz || ''}
                     onChange={(e) => setEducationForm({ ...educationForm, name_uz: e.target.value })}
                     required
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>RU {tr("Muassasa nomi (Name)","Institution Name")}</label>
+                  <label>RU {tr("Muassasa nomi ","Institution Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="Название учреждения на русском"
+                    placeholder={textFor(language).enterText}
                     value={educationForm.name_ru || ''}
                     onChange={(e) => setEducationForm({ ...educationForm, name_ru: e.target.value })}
                   />
@@ -2992,19 +3015,19 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>ENG {tr("Muassasa nomi (Name)","Institution Name")}</label>
+                  <label>ENG {tr("Muassasa nomi ","Institution Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="Institution name in English"
+                    placeholder={textFor(language).enterText}
                     value={educationForm.name_en || ''}
                     onChange={(e) => setEducationForm({ ...educationForm, name_en: e.target.value })}
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>JP {tr("Muassasa nomi (Name)","Institution Name")}</label>
+                  <label>JP {tr("Muassasa nomi ","Institution Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="日本語で機関名を入力してください"
+                    placeholder={textFor(language).enterText}
                     value={educationForm.name_jp || ''}
                     onChange={(e) => setEducationForm({ ...educationForm, name_jp: e.target.value })}
                   />
@@ -3025,27 +3048,27 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
               {/* Logo Upload field */}
               <div className="editor-input-group upload-input-group">
-                <label>{tr("Muassasa Logotipi (Logo)","Institution Logo")}</label>
-                <ImageUpload kind="icon" language={language} value={educationForm.logo?[educationForm.logo]:[]} existing={[editingEducation?.logo]} onBusy={setUploadingCover} onChange={files=>setEducationForm(data=>({...data,logo:files[0]||null,logoName:files[0]?.name||''}))}/>
+                <label>{tr("Muassasa Logotipi ","Institution Logo")}</label>
+                <ImageUpload kind="icon" language={language} value={educationForm.logo?[educationForm.logo]:[]} existing={[educationForm.imageRemoved?null:editingEducation?.logo]} onBusy={setUploadingCover} onChange={files=>setEducationForm(data=>({...data,logo:files[0]||null,imageRemoved:!files.length,logoName:files[0]?.name||''}))}/>
               </div>
 
               {/* Description in 4 languages */}
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>UZ {tr("Batafsil tavsif (Description)","Description")}</label>
+                  <label>UZ {tr("Batafsil tavsif ","Description")}</label>
                   <textarea 
                     rows={3}
-                    placeholder="Batafsil tavsifni o'zbekcha yozing..."
+                    placeholder={textFor(language).enterText}
                     value={educationForm.description_uz || ''}
                     onChange={(e) => setEducationForm({ ...educationForm, description_uz: e.target.value })}
                     required
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>RU {tr("Batafsil tavsif (Description)","Description")}</label>
+                  <label>RU {tr("Batafsil tavsif ","Description")}</label>
                   <textarea 
                     rows={3}
-                    placeholder="Описание на русском..."
+                    placeholder={textFor(language).enterText}
                     value={educationForm.description_ru || ''}
                     onChange={(e) => setEducationForm({ ...educationForm, description_ru: e.target.value })}
                   />
@@ -3054,19 +3077,19 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
-                  <label>ENG {tr("Batafsil tavsif (Description)","Description")}</label>
+                  <label>ENG {tr("Batafsil tavsif ","Description")}</label>
                   <textarea 
                     rows={3}
-                    placeholder="Detailed description in English..."
+                    placeholder={textFor(language).enterText}
                     value={educationForm.description_en || ''}
                     onChange={(e) => setEducationForm({ ...educationForm, description_en: e.target.value })}
                   />
                 </div>
                 <div className="editor-input-group">
-                  <label>JP {tr("Batafsil tavsif (Description)","Description")}</label>
+                  <label>JP {tr("Batafsil tavsif ","Description")}</label>
                   <textarea 
                     rows={3}
-                    placeholder="日本語で詳しい説明を入力してください..."
+                    placeholder={textFor(language).enterText}
                     value={educationForm.description_jp || ''}
                     onChange={(e) => setEducationForm({ ...educationForm, description_jp: e.target.value })}
                   />
@@ -3141,7 +3164,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>UZ {tr("ko'nikma","Skill Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="Masalan: Stressga chidamlilik"
+                    placeholder={textFor(language).enterText}
                     value={personalSkillForm.name_uz}
                     onChange={(e) => setPersonalSkillForm({ ...personalSkillForm, name_uz: e.target.value })}
                     required
@@ -3152,7 +3175,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>RU {tr("ko'nikma","Skill Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="Например: Стрессоустойчивость"
+                    placeholder={textFor(language).enterText}
                     value={personalSkillForm.name_ru}
                     onChange={(e) => setPersonalSkillForm({ ...personalSkillForm, name_ru: e.target.value })}
                   />
@@ -3164,7 +3187,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>ENG {tr("ko'nikma","Skill Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="e.g. Stress resistance"
+                    placeholder={textFor(language).enterText}
                     value={personalSkillForm.name_en}
                     onChange={(e) => setPersonalSkillForm({ ...personalSkillForm, name_en: e.target.value })}
                   />
@@ -3173,7 +3196,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>JP {tr("ko'nikma","Skill Name")}</label>
                   <input 
                     type="text" 
-                    placeholder="例：ストレス耐性"
+                    placeholder={textFor(language).enterText}
                     value={personalSkillForm.name_jp}
                     onChange={(e) => setPersonalSkillForm({ ...personalSkillForm, name_jp: e.target.value })}
                   />
@@ -3235,7 +3258,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>UZ {tr("kuchli tomonlar","Strengths")}</label>
                   <input 
                     type="text" 
-                    placeholder="Masalan: Tafsilotga e'tiborli"
+                    placeholder={textFor(language).enterText}
                     value={strengthForm.text_uz}
                     onChange={(e) => setStrengthForm({ ...strengthForm, text_uz: e.target.value })}
                     required
@@ -3246,7 +3269,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>RU {tr("kuchli tomonlar","Strengths")}</label>
                   <input 
                     type="text" 
-                    placeholder="Например: Внимание к деталям"
+                    placeholder={textFor(language).enterText}
                     value={strengthForm.text_ru}
                     onChange={(e) => setStrengthForm({ ...strengthForm, text_ru: e.target.value })}
                   />
@@ -3258,7 +3281,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>ENG {tr("kuchli tomonlar","Strengths")}</label>
                   <input 
                     type="text" 
-                    placeholder="e.g. Attention to detail"
+                    placeholder={textFor(language).enterText}
                     value={strengthForm.text_en}
                     onChange={(e) => setStrengthForm({ ...strengthForm, text_en: e.target.value })}
                   />
@@ -3267,7 +3290,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>JP {tr("kuchli tomonlar","Strengths")}</label>
                   <input 
                     type="text" 
-                    placeholder="例：細部へのこだわり"
+                    placeholder={textFor(language).enterText}
                     value={strengthForm.text_jp}
                     onChange={(e) => setStrengthForm({ ...strengthForm, text_jp: e.target.value })}
                   />
@@ -3329,7 +3352,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>UZ {tr("Zaif tomonlar","Weaknesses")}</label>
                   <input 
                     type="text" 
-                    placeholder="Masalan: Ishga haddan tashqari berilib ketish"
+                    placeholder={textFor(language).enterText}
                     value={weaknessForm.text_uz}
                     onChange={(e) => setWeaknessForm({ ...weaknessForm, text_uz: e.target.value })}
                     required
@@ -3340,7 +3363,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>RU {tr("Zaif tomonlar","Weaknesses")}</label>
                   <input 
                     type="text" 
-                    placeholder="Например: Слишком сильная вовлеченность в работу"
+                    placeholder={textFor(language).enterText}
                     value={weaknessForm.text_ru}
                     onChange={(e) => setWeaknessForm({ ...weaknessForm, text_ru: e.target.value })}
                   />
@@ -3352,7 +3375,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>ENG {tr("Zaif tomonlar","Weaknesses")}</label>
                   <input 
                     type="text" 
-                    placeholder="e.g. Over-involvement in work"
+                    placeholder={textFor(language).enterText}
                     value={weaknessForm.text_en}
                     onChange={(e) => setWeaknessForm({ ...weaknessForm, text_en: e.target.value })}
                   />
@@ -3361,7 +3384,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   <label>JP {tr("Zaif tomonlar","Weaknesses")}</label>
                   <input 
                     type="text" 
-                    placeholder="例：仕事への過度の没頭"
+                    placeholder={textFor(language).enterText}
                     value={weaknessForm.text_jp}
                     onChange={(e) => setWeaknessForm({ ...weaknessForm, text_jp: e.target.value })}
                   />

@@ -23,7 +23,7 @@ export function useContent(path, language = 'ENG') {
   useEffect(() => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 12000);
-    fetch(window.API_BASE_URL + path + (path.includes('?') ? '&' : '?') + 'lang=' + langCode(language), { signal: controller.signal })
+    fetch(window.API_BASE_URL + path + (path.includes('?') ? '&' : '?') + 'lang=' + langCode(language), { signal: controller.signal, cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error('Content unavailable'); return r.json(); })
       .then(async data => {const result=await localContent(path,data);if(!cancelled)setState({data:result,loading:false,error:false,key});})
       .catch(() => { if (!controller.signal.aborted || !cancelled) setState({ data: null, loading: false, error: true, key }); })

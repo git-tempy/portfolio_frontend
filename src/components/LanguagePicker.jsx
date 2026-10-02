@@ -18,7 +18,7 @@ export default function LanguagePicker({ language, onChange }) {
     return () => document.removeEventListener('pointerdown', dismiss);
   }, [open]);
 
-  return <><div className="language-inline" role="group" aria-label="Languages">
+  return <><div className="language-inline" role="group" aria-label={({UZ:'Tillar',ENG:'Languages',RU:'Языки',JP:'言語'})[language]}>
     {languages.map(([code]) => <button key={code} type="button" aria-pressed={language === code} onClick={() => onChange(code)}>{code}</button>)}
   </div><div ref={root} className="language-picker" onBlur={event => {
     if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
@@ -27,10 +27,10 @@ export default function LanguagePicker({ language, onChange }) {
       event.preventDefault(); event.stopPropagation(); setOpen(false); trigger.current?.focus();
     }
   }}>
-    <button ref={trigger} type="button" className="language-picker-trigger" aria-label={'Language: ' + language} aria-expanded={open} aria-controls={optionsId} onClick={() => setOpen(value => !value)}>
+    <button ref={trigger} type="button" className="language-picker-trigger" aria-label={({UZ:'Til',ENG:'Language',RU:'Язык',JP:'言語'})[language]+': '+language} aria-expanded={open} aria-controls={optionsId} onClick={() => setOpen(value => !value)}>
       <span>{language}</span>
     </button>
-    <div id={optionsId} className={'language-options' + (open ? ' is-open' : '')} role="group" aria-label="Languages" inert={!open}>
+    <div id={optionsId} className={'language-options' + (open ? ' is-open' : '')} role="group" aria-label={({UZ:'Tillar',ENG:'Languages',RU:'Языки',JP:'言語'})[language]} inert={!open}>
       {languages.map(([code, label]) => <button key={code} type="button" aria-pressed={language === code} onClick={() => {
         onChange(code); setOpen(false); trigger.current?.focus();
       }}><span className="language-code">{code}</span><span>{label}</span>{language === code && <Check size={14} aria-hidden="true"/>}</button>)}

@@ -1,0 +1,51 @@
+.skill-cube-scene{--cubie:clamp(84px,7.8cqi,112px);--pitch:calc(var(--cubie) + 7px);position:relative;width:100%;height:550px;isolation:isolate;pointer-events:none;user-select:none}
+.skill-cube-perspective{position:absolute;inset:0;perspective:1400px}
+.skill-cube-orbit,.skill-cube-tilt,.skill-cube-layer,.skill-cubie{position:absolute;left:50%;top:50%;transform-style:preserve-3d;width:0;height:0}
+.skill-cube-orbit{animation:cube-orbit 50s linear infinite}
+.skill-cube-tilt{transform:rotateX(-24deg) rotateZ(-8deg)}
+.skill-cube-layer{transform:translateY(calc(var(--layer-y)*var(--pitch)));animation:cube-slice 21s cubic-bezier(.45,0,.35,1) infinite}
+.skill-cube-layer--1{animation-delay:-7s}.skill-cube-layer--2{animation-delay:-14s}
+.skill-cubie{transform:translate3d(calc(var(--x)*var(--pitch)),0px,calc(var(--z)*var(--pitch)))}
+.skill-cubie-face{position:absolute;width:var(--cubie);height:var(--cubie);left:calc(var(--cubie)/-2);top:calc(var(--cubie)/-2);border-radius:12px;background:linear-gradient(145deg,#b4e9ff24,#0c182e48 42%,#08132172 80%,#c9eaff15);border:1px solid #d4eeff70;backface-visibility:hidden;transform-style:preserve-3d;box-shadow:inset 1px 1px 1px #f3fbff9c,inset -1px -1px 2px #91c5e345,0 0 0 2px #09131d5c,0 0 13px #83c7ec12}
+.skill-cubie-face::before{content:'';position:absolute;inset:3px;border:1px solid #e1f5ff26;border-radius:9px;pointer-events:none}
+.skill-cubie-face::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(128deg,#ffffff2e 0%,#ffffff0c 24%,transparent 25%,transparent 66%,#d3edff12 67%,transparent 74%);transform:translateZ(2px);pointer-events:none}
+.skill-cubie-face--inner{opacity:.2;box-shadow:none}
+.skill-cubie-face--front{transform:translateZ(calc(var(--cubie)/2))}.skill-cubie-face--back{transform:rotateY(180deg) translateZ(calc(var(--cubie)/2))}.skill-cubie-face--right{transform:rotateY(90deg) translateZ(calc(var(--cubie)/2))}.skill-cubie-face--left{transform:rotateY(-90deg) translateZ(calc(var(--cubie)/2))}.skill-cubie-face--top{transform:rotateX(90deg) translateZ(calc(var(--cubie)/2))}.skill-cubie-face--bottom{transform:rotateX(-90deg) translateZ(calc(var(--cubie)/2))}
+.skill-cube-sticker{position:absolute;inset:9px;display:grid;place-items:center;color:var(--tile-color);transform-style:preserve-3d;transform:translateZ(-9px)}
+.skill-cube-sticker::before{content:'';position:absolute;inset:7%;border-radius:50%;background:radial-gradient(ellipse,color-mix(in srgb,var(--tile-color) 44%,transparent),transparent 70%);filter:blur(8px);transform:translateZ(-4px)}
+.skill-cube-logo-core{position:relative;display:grid;place-items:center;filter:none;transform:translateZ(1px)}
+.skill-cube-sticker img,.skill-cube-sticker svg{width:calc(var(--cubie)*.4);height:calc(var(--cubie)*.47);object-fit:contain}
+.skill-cube-monogram{font-family:Arial,sans-serif;font-weight:600;font-size:calc(var(--cubie)*.43);letter-spacing:-1px;text-shadow:none}
+.skill-cube-monogram--corel,.skill-cube-monogram--tilda{font-size:calc(var(--cubie)*.23);letter-spacing:-.6px}
+.skill-cube-halo{position:absolute;inset:60px 0;background:radial-gradient(ellipse,#ccff3310,transparent 67%);filter:blur(20px)}
+.skill-cube-shadow{position:absolute;width:310px;height:48px;left:50%;bottom:10px;transform:translateX(-50%);border-radius:50%;background:#0009;filter:blur(18px)}
+@keyframes cube-orbit{from{transform:rotateY(-28deg)}to{transform:rotateY(332deg)}}
+@keyframes cube-slice{0%,16%{transform:translateY(calc(var(--layer-y)*var(--pitch))) rotateY(0deg)}25%,41%{transform:translateY(calc(var(--layer-y)*var(--pitch))) rotateY(90deg)}50%,66%{transform:translateY(calc(var(--layer-y)*var(--pitch))) rotateY(180deg)}75%,91%{transform:translateY(calc(var(--layer-y)*var(--pitch))) rotateY(270deg)}100%{transform:translateY(calc(var(--layer-y)*var(--pitch))) rotateY(360deg)}}
+[data-theme=light] .skill-cubie-face{background:linear-gradient(145deg,#ffffff70,#d9e9f038 40%,#7497af33 80%,#fff8);border-color:#fff;box-shadow:inset 1px 1px 2px #fff,inset -1px -1px 2px #7898aa50,0 0 0 1px #7498af42,0 0 12px #688ca71a}
+[data-theme=light] .skill-cubie-face::before{border-color:#688fa92e}
+[data-theme=light] .skill-cube-sticker{color:color-mix(in srgb,var(--tile-color) 72%,#14202c)}
+[data-theme=light] .skill-cube-logo-core{filter:none}
+[data-theme=light] .skill-cube-sticker::before{opacity:.65}
+[data-theme=light] .skill-cube-shadow{background:#35434b30}
+@media(min-width:1200px){
+ .hero-human>.container{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(380px,1.05fr);align-items:center;gap:48px}
+ .hero-section.hero-human .hero-copy{min-width:0}
+ .hero-section.hero-human .hero-title,.hero-section.hero-human[data-language=ENG] .hero-title,.hero-section.hero-human[data-language=UZ] .hero-title,.hero-section.hero-human[data-language=RU] .hero-title{font-size:clamp(36px,3.45vw,52px);line-height:1.14}
+ .hero-section.hero-human .hero-copy-line{white-space:normal;text-wrap:balance}
+ .hero-section.hero-human .hero-description{font-size:17px;max-width:650px}
+}
+
+@media(max-width:1199px){.skill-cube-scene{display:none}}
+@media(prefers-reduced-motion:reduce){.skill-cube-orbit,.skill-cube-layer{animation:none}.skill-cube-orbit{transform:rotateY(-28deg)}}
+.skill-cube-sticker,.skill-cube-logo-core,.skill-cubie-face::before,.skill-cubie-face::after{backface-visibility:hidden}
+/* Desktop artwork extends beyond the hero edge, like an editorial cover. */
+@media(min-width:1200px){
+ .hero-human>.container{display:block;position:relative}
+ .hero-section.hero-human .hero-copy{position:relative;z-index:2;width:56%;max-width:710px}
+ .hero-human .skill-cube-scene{--cubie:clamp(99px,8.55vw,138px);position:absolute;width:56vw;max-width:1000px;height:clamp(620px,48vw,830px);right:-12vw;top:calc(50% - 35px);transform:translateY(-45%);z-index:1}
+ .hero-human .skill-cube-perspective{perspective:1800px}
+ .hero-human .skill-cubie-face{background:linear-gradient(145deg,rgba(255,255,255,.08),transparent 48%,rgba(101,217,230,.035)),var(--glass);border-color:var(--border);box-shadow:inset 1px 1px 1px rgba(239,247,230,.28),inset -1px -1px 2px rgba(101,217,230,.12),0 0 0 2px rgba(0,0,0,.2),0 0 12px rgba(101,217,230,.025)}
+ .hero-human .skill-cubie-face::before{border-color:var(--border)}
+ .hero-human .skill-cubie-face::after{background:linear-gradient(128deg,rgba(255,255,255,.12),rgba(255,255,255,.025) 24%,transparent 25%,transparent 66%,rgba(255,255,255,.04) 67%,transparent 74%)}
+ .hero-human .skill-cube-shadow{width:440px;bottom:0}
+}

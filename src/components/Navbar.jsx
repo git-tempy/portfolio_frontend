@@ -1,3 +1,4 @@
+import {textFor} from '../lib/uiText';
 import { useEffect, useRef, useState } from 'react';
 import { Sun, Moon, Menu, X, ArrowUpRight, FileText } from 'lucide-react';
 import { locales } from '../locales';
@@ -11,7 +12,7 @@ export default function Navbar({ language, setLanguage, theme, toggleTheme, onRe
   const menuRef = useRef(null);
   const triggerRef = useRef(null);
   const t = locales[language] || locales.ENG;
-  const items = ['about', 'experience', 'portfolio', 'contact'];
+  const items = ['about', 'experience', 'portfolio', 'life', 'contact'];
   useEffect(() => {
     const update = () => setScrolled(window.scrollY > 20);
     addEventListener('scroll', update, { passive: true });
@@ -49,14 +50,14 @@ export default function Navbar({ language, setLanguage, theme, toggleTheme, onRe
     if (location.pathname !== '/') navigate('/?lang=' + language + '#' + id);
     requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }));
   };
-  const links = items.map(id => <a key={id} href={'/#' + id} onClick={e => go(e, id)} aria-current={active === id ? 'location' : undefined}>{t.nav[id]}</a>);
+  const links = items.map(id => <a key={id} href={'/#' + id} onClick={e => go(e, id)} aria-current={active === id ? 'location' : undefined}>{id==='life'?textFor(language).life:t.nav[id]}</a>);
   const languageSelect = <LanguagePicker language={language} onChange={setLanguage}/>;
   return <header className={'site-header'+(scrolled?' is-scrolled':'')}>
-    <nav className="nav-shell" aria-label="Main navigation">
-      <a className="brand" href="/" aria-label="DesOne home" onClick={e => go(e, 'home')}><span>des</span>one</a>
+    <nav className="nav-shell" aria-label={textFor(language).navigation}>
+      <a className="brand" href="/" aria-label={'DesOne · '+textFor(language).home} onClick={e => go(e, 'home')}><span>des</span>one</a>
       <div className="desktop-links">{links}</div>
-      <div className="nav-tools"><button className="icon-button" aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={toggleTheme}>{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}</button>{languageSelect}<button className="icon-button navbar-resume" aria-label={t.resume} title={t.resume} onClick={onResumeClick}><FileText size={18} aria-hidden="true"/><span className="navbar-resume-label">{t.resume}</span></button><button ref={triggerRef} className="icon-button mobile-trigger" aria-label="Open menu" aria-expanded={open} aria-controls="mobile-navigation" onClick={() => setOpen(true)}><Menu size={16}/></button></div>
+      <div className="nav-tools"><button className="icon-button" aria-label={theme === 'dark' ? textFor(language).light : textFor(language).dark} onClick={toggleTheme}>{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}</button>{languageSelect}<button className="icon-button navbar-resume" aria-label={t.resume} title={t.resume} onClick={onResumeClick}><FileText size={18} aria-hidden="true"/><span className="navbar-resume-label">{t.resume}</span></button><button ref={triggerRef} className="icon-button mobile-trigger" aria-label={textFor(language).openMenu} aria-expanded={open} aria-controls="mobile-navigation" onClick={() => setOpen(true)}><Menu size={16}/></button></div>
     </nav>
-    {open && <div className="mobile-menu-backdrop" onClick={() => setOpen(false)}><div ref={menuRef} id="mobile-navigation" className="mobile-navigation" role="dialog" aria-modal="true" aria-label="Navigation" onClick={e => e.stopPropagation()}><div className="mobile-nav-top"><span className="brand"><span>des</span>one.</span><button className="icon-button" aria-label="Close menu" onClick={() => { setOpen(false); triggerRef.current?.focus(); }}><X /></button></div><div className="mobile-links">{links}</div><button className="button button-primary" onClick={() => { setOpen(false); onResumeClick(); }}>{t.resume}<ArrowUpRight size={18} /></button></div></div>}
+    {open && <div className="mobile-menu-backdrop" onClick={() => setOpen(false)}><div ref={menuRef} id="mobile-navigation" className="mobile-navigation" role="dialog" aria-modal="true" aria-label={textFor(language).navigation} onClick={e => e.stopPropagation()}><div className="mobile-nav-top"><span className="brand"><span>des</span>one.</span><button className="icon-button" aria-label={textFor(language).closeMenu} onClick={() => { setOpen(false); triggerRef.current?.focus(); }}><X /></button></div><div className="mobile-links">{links}</div><button className="button button-primary" onClick={() => { setOpen(false); onResumeClick(); }}>{t.resume}<ArrowUpRight size={18} /></button></div></div>}
   </header>;
 }

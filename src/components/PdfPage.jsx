@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-export default function PdfPage({ url, page, onCount, zoom }) {
+import {textFor} from '../lib/uiText';
+export default function PdfPage({ url, page, onCount, zoom, language='ENG' }) {
   const canvas = useRef(null);
   const [document, setDocument] = useState(null);
   const [error, setError] = useState(false);
@@ -28,12 +29,12 @@ export default function PdfPage({ url, page, onCount, zoom }) {
       const viewport = pdfPage.getViewport({ scale });
       node.width = viewport.width; node.height = viewport.height;
       node.setAttribute('role', 'img');
-      node.setAttribute('aria-label', 'Document page ' + page);
+      node.setAttribute('aria-label', ({UZ:'Hujjat sahifasi',ENG:'Document page',RU:'Страница документа',JP:'文書のページ'})[language]+' '+page);
       render = pdfPage.render({ canvasContext: node.getContext('2d'), viewport });
       return render.promise;
     }).catch(e => { if (!disposed && e.name !== 'RenderingCancelledException') setError(true); });
     return () => { disposed = true; render?.cancel(); };
-  }, [document, page]);
-  if (error) return <div className="viewer-message" role="alert">This document could not be displayed. Please try again later.</div>;
+  }, [document, page, language]);
+  if (error) return <div className="viewer-message" role="alert">{textFor(language).unavailable}</div>;
   return <div className="pdf-render" ref={canvas} style={{ width: zoom === 1 ? undefined : zoom * 100 + '%', maxWidth: zoom === 1 ? '100%' : 'none' }} aria-busy={!document}>{!document && <span className="spinner" />}</div>;
 }
