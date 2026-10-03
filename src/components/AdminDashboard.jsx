@@ -1,6 +1,6 @@
 import VisitorChart from './VisitorChart';
 import VisitorHistory from './VisitorHistory';
-import LifeAdmin from './LifeAdmin';
+import ServicesAdmin from './ServicesAdmin';
 import {textFor,deviceLabel,weekdayLabel,activityLabel,activityTime} from '../lib/uiText';
 import { useState, useEffect } from 'react';
 import { 
@@ -1154,10 +1154,10 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       <aside id="admin-navigation" className={`admin-sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
             <h1>{t.title}</h1>
-            <span className="breadcrumbs">{t.sidebar[({overview:"dashboard","portfolio-categories":"subCategory","portfolio-projects":"subProjects","resume-downloads":"resumeDownloads"})[activeTab] || activeTab]|| (activeTab==='life'?textFor(language).life:'')}</span>
+            <span className="breadcrumbs">{t.sidebar[({overview:"dashboard","portfolio-categories":"subCategory","portfolio-projects":"subProjects","resume-downloads":"resumeDownloads"})[activeTab] || activeTab]|| (activeTab==='services'?({UZ:'Xizmatlar',RU:'Услуги',ENG:'Services',JP:'サービス'})[language]:'')}</span>
         </div>
 
-        <nav className="sidebar-nav"><button className={`sidebar-link ${activeTab==='life'?'active-link':''}`} onClick={()=>{setMobileSidebarOpen(false);setActiveTab('life');}}><History size={20}/><span>{textFor(language).life}</span></button>
+        <nav className="sidebar-nav"><button className={`sidebar-link ${activeTab==='services'?'active-link':''}`} onClick={()=>{setMobileSidebarOpen(false);setActiveTab('services');}}><Briefcase size={20}/><span>{({UZ:'Xizmatlar',RU:'Услуги',ENG:'Services',JP:'サービス'})[language]}</span></button>
           {/* 1. Dashboard Link */}
           <button 
             className={`sidebar-link ${activeTab === 'overview' ? 'active-link' : ''}`}
@@ -1307,7 +1307,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
         {requestError && <div className="admin-error-banner" role="alert"><span>{requestError}</span><button type="button" aria-label={tr("Xatoni yopish","Dismiss error")} onClick={()=>setRequestError('')}><X size={18}/></button></div>}
 
         {/* Dynamic Panel Content */}
-        <div className="workspace-content">{activeTab==='life'&&<LifeAdmin language={language}/>}
+        <div className="workspace-content">{activeTab==='services'&&<ServicesAdmin language={language}/>}
           
           {/* 1. DASHBOARD OVERVIEW */}
           {activeTab === 'overview' && (
@@ -1781,56 +1781,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 ))}
               </div>
 
-              {/* Shaxsiy Ko'nikmalar (Personal Skills) Section */}
-              <div className="skills-section-separator"></div>
-              
-              <div className="personal-skills-management-box">
-                <div className="panel-toolbar-header">
-                  <h3>{tr("Shaxsiy ko'nikmalar","Personal Skills")}</h3>
-                  <button 
-                    type="button" 
-                    className="add-item-btn"
-                    onClick={() => {
-                      setPersonalSkillForm({
-                        name_uz: '',
-                        name_ru: '',
-                        name_en: '',
-                        name_jp: ''
-                      });
-                      setShowPersonalSkillModal(true);
-                    }}
-                  >
-                    <Plus size={16} />
-                    <span>{tr("Ko'nikma qo'shish","Add Skill")}</span>
-                  </button>
-                </div>
-
-                <div className="personal-skills-chips-wrapper">
-                  {skills.filter(s => s.type === 'Personal').map((ps) => (
-                    <div key={ps.id} className="personal-skill-chip-badge">
-                      <span>{ps.name}</span>
-                      <button 
-                        type="button" 
-                        className="chip-remove-btn"
-                        onClick={async () => {
-                          try {
-                            const res = await adminFetch(`${window.API_BASE_URL}/api/skills/${ps.id}/`, {
-                              method: 'DELETE',
-                            });
-                            if (res.ok) {
-                              setSkills(skills.filter(s => s.id !== ps.id));
-                            }
-                          } catch (err) {
-                            console.error('Error deleting personal skill:', err);
-                          }
-                        }}
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ServicesAdmin language={language}/>
 
               {/* Kuchli & Zaif Tomonlar (Strengths & Weaknesses) Section */}
               <div className="skills-section-separator"></div>
@@ -2069,7 +2020,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                     <tr>
                       <th>{t.downloads.colName}</th>
                       <th>{t.downloads.colPhone}</th>
-                      <th>{t.downloads.colEmail}</th>
+                      <th>Telegram</th>
                       <th>{t.downloads.colPurpose}</th>
                       <th>{t.downloads.colTime}</th>
                       <th style={{ textAlign: 'right' }}>{t.downloads.colActions}</th>
@@ -2080,7 +2031,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                       <tr key={dl.id}>
                         <td className="col-title">{dl.name}</td>
                         <td className="col-cat" style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>{dl.phone}</td>
-                        <td className="col-email">{dl.email}</td>
+                        <td className="col-email">{dl.telegram || dl.email || '—'}</td>
                         <td className="col-msg-text" title={dl.purpose}>{dl.purpose}</td>
                         <td className="col-type" style={{ fontSize: '0.8rem' }}>
                           {new Date(dl.created_at).toLocaleString()}

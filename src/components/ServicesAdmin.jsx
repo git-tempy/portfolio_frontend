@@ -1,0 +1,12 @@
+import {useEffect,useState} from 'react';
+import {adminFetch} from '../lib/adminApi';
+const languages=['uz','en','ru','jp'];
+export default function ServicesAdmin({language}){
+ const [items,setItems]=useState([]),[form,setForm]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const t=({UZ:{title:'Xizmatlar',add:'Xizmat qo‘shish',edit:'Tahrirlash',remove:'O‘chirish',save:'Saqlash',cancel:'Bekor qilish'},ENG:{title:'Services',add:'Add service',edit:'Edit',remove:'Delete',save:'Save',cancel:'Cancel'},RU:{title:'Услуги',add:'Добавить услугу',edit:'Изменить',remove:'Удалить',save:'Сохранить',cancel:'Отмена'},JP:{title:'サービス',add:'サービスを追加',edit:'編集',remove:'削除',save:'保存',cancel:'キャンセル'}})[language];
+ const load=()=>adminFetch(window.API_BASE_URL+'/api/skills/').then(r=>r.json()).then(a=>setItems(a.filter(s=>s.type==='Service')));
+ useEffect(()=>{load().catch(e=>setError(e.message));},[]);
+ const save=async e=>{e.preventDefault();setBusy(true);setError('');try{const r=await adminFetch(window.API_BASE_URL+'/api/skills/'+(form.id?form.id+'/':''),{method:form.id?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...form,name:form.name_uz,type:'Service',level:null})});if(!r.ok)throw Error(await r.text());await load();setForm(null);}catch(e){setError(e.message);}finally{setBusy(false);}};
+ return <div className="glass-panel"><h2>{t.title}</h2><button className="button button-primary" onClick={()=>setForm(Object.fromEntries(languages.map(l=>['name_'+l,''])))}>{t.add}</button>{error&&<p role="alert">{error}</p>}{form&&<form className="contact-form" onSubmit={save}>{languages.map(l=><label key={l}>{l.toUpperCase()}<input required value={form['name_'+l]||''} onChange={e=>setForm({...form,['name_'+l]:e.target.value})}/></label>)}<button className="button button-primary" disabled={busy}>{t.save}</button><button type="button" onClick={()=>setForm(null)}>{t.cancel}</button></form>}<ul>{items.map(s=><li key={s.id} style={{display:'flex',alignItems:'center',gap:16,padding:12}}><span style={{flex:1}}>{s['name_'+({UZ:'uz',ENG:'en',RU:'ru',JP:'jp'})[language]]}</span><button onClick={()=>setForm(s)}>{t.edit}</button><button onClick={async()=>{try{const r=await adminFetch(window.API_BASE_URL+'/api/skills/'+s.id+'/',{method:'DELETE'});if(r.ok)await load();}catch(e){setError(e.message);}}}>{t.remove}</button></li>)}</ul></div>;
+}
+

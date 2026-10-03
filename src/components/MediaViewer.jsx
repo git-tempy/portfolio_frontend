@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, Download } from 'lucide-react';
 import PdfPage from './PdfPage';
 
-export default function MediaViewer({ title, category, description, images = [], pdfUrl, downloadUrl, onClose, language = 'ENG', children }) {
+export default function MediaViewer({ title, category, description, images = [], pdfUrl, downloadUrl, onDownload, onClose, language = 'ENG', children }) {
   const dialog = useRef(null), stage = useRef(null), pointers = useRef(new Map()), gesture = useRef(null);
   const [index, setIndex] = useState(0), [zoom, setZoom] = useState(1), [pdfCount, setPdfCount] = useState(1);
   const [size, setSize] = useState({ width: 900, height: 650 });
@@ -59,7 +59,7 @@ export default function MediaViewer({ title, category, description, images = [],
     pointers.current.delete(e.pointerId); if(!pointers.current.size) gesture.current=null;
   };
   return <dialog ref={dialog} className="media-dialog" aria-label={title} onCancel={e=>{e.preventDefault();onClose();}} onKeyDown={onKey}>
-    <header className="viewer-header"><div className="viewer-title"><span className="eyebrow">{category || 'DESONE / PORTFOLIO'}</span><h2>{title}</h2></div><div className="viewer-tools">{downloadUrl && <a className="button button-primary resume-download" href={downloadUrl} download><Download size={17}/><span>{t.download}</span></a>}<button autoFocus className="icon-button" aria-label={t.close} onClick={onClose}><X/></button></div></header>
+    <header className="viewer-header"><div className="viewer-title"><span className="eyebrow">{category || 'DESONE / PORTFOLIO'}</span><h2>{title}</h2></div><div className="viewer-tools">{downloadUrl && (onDownload?<button className="button button-primary resume-download" onClick={onDownload}><Download size={17}/><span>{t.download}</span></button>:<a className="button button-primary resume-download" href={downloadUrl} download><Download size={17}/><span>{t.download}</span></a>)}<button autoFocus className="icon-button" aria-label={t.close} onClick={onClose}><X/></button></div></header>
     {description && <p className="viewer-description">{description}</p>}
     <div className="viewer-stage" ref={stage} style={{touchAction:zoom>1?'none':'pan-y'}} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={e=>{pointers.current.delete(e.pointerId);gesture.current=null;}} onContextMenu={e=>e.preventDefault()}>
       {children || (pdfUrl ? <PdfPage key={pdfUrl} url={pdfUrl} page={index+1} onCount={setPdfCount} zoom={zoom} language={language}/> : images.length ? <div className={'viewer-image-wrap '+(zoom>1?'is-zoomed':'')} style={zoom>1 ? {width:Math.max(size.width,natural.width*fit*zoom+32),height:Math.max(size.height,natural.height*fit*zoom+32)}:{}}>{!loaded && !failed && <span className="spinner" aria-label={t.loading}/>}{failed ? <div className="viewer-message" role="alert">{t.unavailable}</div>:<img key={index} src={images[index].image || images[index]} alt={title+' — '+(index+1)} draggable="false" style={{width:Math.max(1,natural.width*fit*zoom),height:Math.max(1,natural.height*fit*zoom),opacity:loaded?1:0}} onLoad={e=>{setNatural({width:e.currentTarget.naturalWidth,height:e.currentTarget.naturalHeight});setLoaded(true);}} onError={()=>setFailed(true)}/>}</div>:<div className="viewer-message">{t.noImages}</div>)}
@@ -68,3 +68,4 @@ export default function MediaViewer({ title, category, description, images = [],
     {!pdfUrl && images.length>1 && <div className="viewer-thumbnails" aria-label={t.gallery}>{images.map((img,i)=><button key={i} aria-label={t.image+' '+(i+1)} aria-current={index===i?'true':undefined} onClick={()=>{if(i===index)return;setIndex(i);setZoom(1);setLoaded(false);setFailed(false);stage.current?.scrollTo(0,0);}}><img src={img.image||img} alt="" loading="lazy" draggable="false"/></button>)}</div>}
   </dialog>;
 }
+

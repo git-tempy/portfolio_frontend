@@ -291,3 +291,5 @@ body{overflow-x:clip}
 /* Keep contact icons and copy aligned to the left at every breakpoint. */
 .contact-links>a{justify-content:flex-start;text-align:left}
 
+.trait-row{align-items:center;min-height:66px}.trait-row>.accent{display:flex;align-items:center;justify-content:center;flex:0 0 28px}.trait-text{min-width:0;line-height:1.5;overflow-wrap:anywhere}
+

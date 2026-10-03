@@ -1,5 +1,6 @@
+import Services from './Services';
 import { useState } from 'react';
-import { ArrowUpRight, GraduationCap, Plus, Minus, Award, Briefcase } from 'lucide-react';
+import { ArrowUpRight, GraduationCap, Plus, Minus, Award, Briefcase, Users, Target, ScanSearch, Brain, Lightbulb, Clock, ListChecks, Coffee, Headphones } from 'lucide-react';
 import {textFor,localizedPeriod} from '../lib/uiText';
 import { locales } from '../locales';
 import { useContent, localized } from '../lib/content';
@@ -8,6 +9,11 @@ import MediaViewer from './MediaViewer';
 import Reveal from './Reveal';
 import ExperienceProcess from './ExperienceProcess';
 
+function TraitIcon({trait}) {
+ const text=(trait.text_en||trait.text||'').toLowerCase();
+ const Icon=text.includes('team')?Users:text.includes('independent')?Target:text.includes('detail')?ScanSearch:text.includes('critical')?Brain:text.includes('creativ')?Lightbulb:text.includes('time management')?Clock:text.includes('perfection')?ListChecks:text.includes('coffee')?Coffee:text.includes('music')?Headphones:Lightbulb;
+ return <Icon size={22} strokeWidth={1.7} aria-hidden="true"/>;
+}
 const aboutQuote = {
  UZ: { body: 'Ayni paytda dizaynerlar, ayniqsa frilanserlar, bir holatga ko‘p duch kelishadi: soatlab mehnat qilib yaratgan dizaynini ko‘rsatishsa, «Bu AI’da qilingan-ku», degan gapni eshitishadi. Aslida, AI — faqat vosita. U ishni tezlashtirishi va unumdorlikni oshirishi mumkin.', ending: 'lekin, hikoyani asl mohiyatini faqatgina dizayner ifodalab beradi.' },
  ENG: { body: 'Nowadays, designers — especially freelancers — often spend hours on a design, only to hear, “This was made with AI.” AI is a tool. It can speed up the work and improve productivity.', ending: 'But only the designer can express the true essence of the story.' },
@@ -42,10 +48,11 @@ export function SkillsSection({ language }) {
   const state=useContent('/api/skills/',language), traitsState=useContent('/api/traits/',language);
   const items=Array.isArray(state.data)?state.data:[],traits=Array.isArray(traitsState.data)?traitsState.data:[];
   const t=(locales[language]||locales.ENG).skills;
-  return <section className="section" id="skills"><div className="container"><SectionTitle index="03" label={textFor(language).tools} title={t.title}/><ContentState state={state} language={language} empty={!items.length}/>{['Software','Personal'].map(type=>items.some(s=>s.type===type)&&<div className="skills-group" key={type}><h3 className="subheading">{type==='Software'?t.software:t.personal}</h3><div className={type==='Software'?'tool-grid':'personal-grid'}>{items.filter(s=>s.type===type).map((s,i)=><Reveal className="tool-card glass" key={s.id} scale={type==='Software'?.9:1} y={type==='Software'?0:20} duration={.4} delay={i*(type==='Software'?.05:.06)}><span className={'tool-symbol tool-color-'+i%6}>{s.image?<img src={s.image} alt="" loading="lazy"/>:type==='Personal'?['✦','◎','◈','✱'][i%4]:s.name.toLowerCase().includes('photoshop')?'Ps':s.name.toLowerCase().includes('illustrator')?'Ai':s.name.toLowerCase().includes('framer')?'Fr':s.name.slice(0,1)}</span><span>{localized(s,'name',language)}</span></Reveal>)}</div></div>)}<ContentState state={traitsState} language={language}/>{traits.length>0&&<div className="traits-grid">{['Strength','Weakness'].map(type=><div key={type}><h3 className="subheading">{type==='Strength'?t.strengthsTitle:t.weaknessesTitle}</h3>{traits.filter(s=>s.type===type).map((s,i)=><Reveal className="trait-row glass" key={s.id} x={type==='Strength'?-20:20} y={0} duration={.4} delay={i*.06}><span className="accent">{type==='Strength'?['⚡','🎯','✦'][i%3]:['◷','⊕'][i%2]}</span>{localized(s,'text',language)}</Reveal>)}</div>)}</div>}</div></section>;
+  return <section className="section" id="skills"><div className="container"><SectionTitle index="03" label={textFor(language).tools} title={t.title}/><ContentState state={state} language={language} empty={!items.length}/>{['Software','Personal'].map(type=>items.some(s=>s.type===type)&&<div className="skills-group" key={type}><h3 className="subheading">{type==='Software'?t.software:t.personal}</h3><div className={type==='Software'?'tool-grid':'personal-grid'}>{items.filter(s=>s.type===type).map((s,i)=><Reveal className="tool-card glass" key={s.id} scale={type==='Software'?.9:1} y={type==='Software'?0:20} duration={.4} delay={i*(type==='Software'?.05:.06)}><span className={'tool-symbol tool-color-'+i%6}>{s.image?<img src={s.image} alt="" loading="lazy"/>:type==='Personal'?['✦','◎','◈','✱'][i%4]:s.name.toLowerCase().includes('photoshop')?'Ps':s.name.toLowerCase().includes('illustrator')?'Ai':s.name.toLowerCase().includes('framer')?'Fr':s.name.slice(0,1)}</span><span>{localized(s,'name',language)}</span></Reveal>)}</div></div>)}<ContentState state={traitsState} language={language}/>{traits.length>0&&<><h3 className="subheading">{t.personal}</h3><div className="traits-grid">{['Strength','Weakness'].map(type=><div key={type}><h3 className="subheading">{type==='Strength'?t.strengthsTitle:t.weaknessesTitle}</h3>{traits.filter(s=>s.type===type).map((s,i)=><Reveal className="trait-row glass" key={s.id} x={type==='Strength'?-20:20} y={0} duration={.4} delay={i*.06}><span className="accent"><TraitIcon trait={s}/></span><span className="trait-text">{localized(s,'text',language)}</span></Reveal>)}</div>)}</div></>}<Services language={language}/></div></section>;
 }
 export function ExperienceSection({ language }) {
   const state=useContent('/api/experiences/',language),items=Array.isArray(state.data)?state.data:[];
   const t=(locales[language]||locales.ENG).experience;
   return <section className="section" id="experience"><div className="container"><SectionTitle index="04" label={textFor(language).journey} title={t.title}/><ContentState state={state} language={language} empty={!items.length}/><div className="journey">{items.map((job,i)=><Reveal as="article" className="journey-row" key={job.id} delay={i*.1}><span className="journey-marker" aria-hidden="true"><Briefcase size={16}/></span><div className="journey-card glass"><div className="journey-top"><div><div className="journey-date">{localizedPeriod(job.period,language)}</div><h3>{localized(job,'role',language)}</h3><span className="journey-company">{localized(job,'company',language)}</span></div><ExperienceProcess job={job}/></div><p>{localized(job,'desc',language)}</p></div></Reveal>)}</div></div></section>;
 }
+
