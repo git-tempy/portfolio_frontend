@@ -20,3 +20,4 @@ const extra={
 };
 for(const language of Object.keys(extra))Object.assign(uiText[language],extra[language]);
 for(const [language,portfolio,enterText] of [['UZ','Portfolio','Matnni kiriting'],['ENG','Portfolio','Enter text'],['RU','Портфолио','Введите текст'],['JP','ポートフォリオ','テキストを入力']])Object.assign(uiText[language],{portfolio,enterText});
+
