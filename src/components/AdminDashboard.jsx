@@ -1,3 +1,4 @@
+import VisitorChart from './VisitorChart';
 import VisitorHistory from './VisitorHistory';
 import LifeAdmin from './LifeAdmin';
 import {textFor,deviceLabel,weekdayLabel,activityLabel,activityTime} from '../lib/uiText';
@@ -1362,38 +1363,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               {/* Graphic Mock & Recent Activity */}
               <div className="overview-details-layout">
                 {/* Analytics Mockup Chart */}
-                <div className="dashboard-analytics-box glass-panel">
-                  <div className="panel-header-with-action">
-                    <h3>{tr("Oxirgi 7 kun tashriflari","Visitor Analytics (Past 7 Days)")}</h3>
-                    <Sliders size={14} className="panel-icon-btn" />
-                  </div>
-                  <div className="mock-chart-visual">
-                    <div className="chart-glow-glow"></div>
-                    <div className="chart-bars-wrap">
-                      {dashboardStats.visitor_analytics && dashboardStats.visitor_analytics.length > 0 ? (
-                        (() => {
-                          const maxCount = Math.max(...dashboardStats.visitor_analytics.map(d => d.count), 1);
-                          return dashboardStats.visitor_analytics.map((d, index) => {
-                            const pct = Math.round((d.count / maxCount) * 100);
-                            return (
-                              <div className="chart-column" key={index}>
-                                <div className="chart-fill" style={{ height: `${pct}%` }} title={`${d.count} views`}></div>
-                                <span className="chart-day">{weekdayLabel(d.day,language)}</span>
-                              </div>
-                            );
-                          });
-                        })()
-                      ) : (
-                        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                          <div className="chart-column" key={day}>
-                            <div className="chart-fill" style={{ height: '0%' }}></div>
-                            <span className="chart-day">{weekdayLabel(day,language)}</span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
+                <VisitorChart language={language}/>
 
                 <VisitorHistory language={language}/>
                 {/* Recent Activities */}
