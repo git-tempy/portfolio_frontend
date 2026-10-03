@@ -1396,8 +1396,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
                 <div className="dashboard-devices-box glass-panel">
                   <h3>{({UZ:'Tashrif buyurgan qurilmalar',RU:'Устройства посетителей',ENG:'Visitor devices',JP:'訪問者のデバイス'})[language]}</h3>
-                  <div className="device-summary">{['mobile','tablet','desktop'].map(type=><span key={type}>{deviceLabel(type,language)} <strong>{dashboardStats.device_summary?.find(item=>item.device_type===type)?.count||0}</strong></span>)}</div>
-                  {dashboardStats.visitor_devices?.length>0?<div className="device-table-scroll"><table className="device-table"><thead><tr><th>ID</th><th>{({UZ:'Qurilma',RU:'Устройство',ENG:'Device',JP:'デバイス'})[language]}</th><th>{({UZ:'Tashriflar',RU:'Посещения',ENG:'Visits',JP:'訪問回数'})[language]}</th><th>{({UZ:'Oxirgi tashrif',RU:'Последний визит',ENG:'Last visit',JP:'最終訪問'})[language]}</th></tr></thead><tbody>{dashboardStats.visitor_devices.map(item=><tr key={item.device_id}><td><code title={item.device_id}>{item.device_id}</code></td><td>{deviceLabel(item.device_type,language)}</td><td>{item.visits}</td><td>{new Date(item.last_seen).toLocaleString(({UZ:'uz',RU:'ru',ENG:'en',JP:'ja'})[language])}</td></tr>)}</tbody></table></div>:<p>{({UZ:'Hali qurilma tashriflari qayd etilmagan.',RU:'Посещения устройств пока не зарегистрированы.',ENG:'No device visits recorded yet.',JP:'デバイスの訪問記録はまだありません。'})[language]}</p>}
+
+                  {dashboardStats.visitor_devices?.length>0?<div className="device-table-scroll"><table className="device-table"><thead><tr><th>ID</th><th>{({UZ:'Qurilma',RU:'Устройство',ENG:'Device',JP:'デバイス'})[language]}</th><th>{({UZ:'Tashriflar',RU:'Посещения',ENG:'Visits',JP:'訪問回数'})[language]}</th><th>IP</th><th>{({UZ:'Oxirgi tashrif',RU:'Последний визит',ENG:'Last visit',JP:'最終訪問'})[language]}</th></tr></thead><tbody>{dashboardStats.visitor_devices.map(item=><tr key={item.device_id}><td><code>{'D' + String(item.short_id).padStart(4,'0')}</code></td><td>{deviceLabel(item.device_type,language)}</td><td>{item.visits}</td><td>{item.ip_address||'—'}</td><td>{new Date(item.last_seen).toLocaleString(({UZ:'uz',RU:'ru',ENG:'en',JP:'ja'})[language])}</td></tr>)}</tbody></table></div>:<p>{({UZ:'Hali qurilma tashriflari qayd etilmagan.',RU:'Посещения устройств пока не зарегистрированы.',ENG:'No device visits recorded yet.',JP:'デバイスの訪問記録はまだありません。'})[language]}</p>}
                 </div>
                 {/* Recent Activities */}
                 <div className="dashboard-activities-box glass-panel">
@@ -3409,3 +3409,4 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     </div>
   );
 }
+
