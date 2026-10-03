@@ -13,8 +13,12 @@ function location(row,language,t){
  let country=row.country_code;
  try{if(country)country=new Intl.DisplayNames([locale[language]],{type:'region'}).of(country);}catch{/* Keep country code if unsupported. */}
  const regions={TK:'Toshkent',TO:'Toshkent viloyati',AN:'Andijon',BU:'Buxoro',FA:'Farg‘ona',JI:'Jizzax',NG:'Namangan',NW:'Navoiy',QA:'Qashqadaryo',QR:'Qoraqalpog‘iston',SA:'Samarqand',SI:'Sirdaryo',SU:'Surxondaryo',XO:'Xorazm'};
- const region=row.country_code==='UZ'&&regions[row.region]?regions[row.region]:row.region;
- return [country,region,row.city].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(', ')||t.unknown;
+ const uzCountries={UZ:'O‘zbekiston',US:'AQSH',RU:'Rossiya',JP:'Yaponiya',TR:'Turkiya',KZ:'Qozog‘iston',KG:'Qirg‘iziston',TJ:'Tojikiston',KR:'Janubiy Koreya',CN:'Xitoy',GB:'Buyuk Britaniya',DE:'Germaniya',FR:'Fransiya',IN:'Hindiston',AE:'Birlashgan Arab Amirliklari'};
+ if(language==='UZ'&&uzCountries[row.country_code])country=uzCountries[row.country_code];
+ const tashkent={UZ:'Toshkent',ENG:'Tashkent',RU:'Ташкент',JP:'タシケント'}[language];
+ const region=row.country_code==='UZ'&&row.region==='TK'?tashkent:row.country_code==='UZ'&&regions[row.region]?regions[row.region]:row.region;
+ const city=/^(Tashkent|Toshkent)$/i.test(row.city||'')?tashkent:row.city;
+ return [country,region,city].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(', ')||t.unknown;
 }
 export default function VisitorHistory({language}){
  const t=copy[language]||copy.ENG;
