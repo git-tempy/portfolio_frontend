@@ -316,7 +316,7 @@ body{overflow-x:clip}
 .credential-card .text-button{margin:0;font-size:14px}
 .services-group+.skills-group,.personal-traits{margin-top:40px}
 .personal-traits>.traits-grid{margin-top:20px}
-.traits-grid>div .subheading{color:var(--text-primary)}
+.traits-grid>div:nth-child(n) .subheading{color:var(--text-primary)}
 .media-dialog.media-dialog-fit{inset:auto;top:50%;left:50%;transform:translate(-50%,-50%);margin:0;width:min(1040px,calc(100vw - 32px),calc((100dvh - 180px) * var(--media-ratio)));height:auto;max-height:calc(100dvh - 32px);border:1px solid var(--border);border-radius:22px;background:var(--glass);backdrop-filter:blur(24px) saturate(150%)}
 .media-dialog-fit .viewer-header{padding:12px 16px}
 .media-dialog-fit .viewer-title h2{font-size:18px;white-space:normal}
