@@ -375,7 +375,7 @@ body{overflow-x:clip}
  .subsection-heading{margin-bottom:20px}
  .subsection-heading .subheading{font-size:24px}
  .journey-card{padding:18px}
- .journey-top{grid-template-columns:minmax(0,1fr) clamp(100px,28vw,120px);gap:6px 12px}
+ .journey-top{grid-template-columns:minmax(0,1fr) 90px;gap:6px 12px}
  .journey-top .experience-process{width:100%;align-self:start}
  .journey-top .journey-date{font-size:11px;line-height:1.4;align-self:center;letter-spacing:.06em}
  .journey-top h3{font-size:17px;line-height:1.3}
