@@ -1157,7 +1157,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
             <span className="breadcrumbs">{t.sidebar[({overview:"dashboard","portfolio-categories":"subCategory","portfolio-projects":"subProjects","resume-downloads":"resumeDownloads"})[activeTab] || activeTab]|| (activeTab==='services'?({UZ:'Xizmatlar',RU:'Услуги',ENG:'Services',JP:'サービス'})[language]:'')}</span>
         </div>
 
-        <nav className="sidebar-nav"><button className={`sidebar-link ${activeTab==='services'?'active-link':''}`} onClick={()=>{setMobileSidebarOpen(false);setActiveTab('services');}}><Briefcase size={20}/><span>{({UZ:'Xizmatlar',RU:'Услуги',ENG:'Services',JP:'サービス'})[language]}</span></button>
+        <nav className="sidebar-nav">
           {/* 1. Dashboard Link */}
           <button 
             className={`sidebar-link ${activeTab === 'overview' ? 'active-link' : ''}`}
@@ -1307,7 +1307,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
         {requestError && <div className="admin-error-banner" role="alert"><span>{requestError}</span><button type="button" aria-label={tr("Xatoni yopish","Dismiss error")} onClick={()=>setRequestError('')}><X size={18}/></button></div>}
 
         {/* Dynamic Panel Content */}
-        <div className="workspace-content">{activeTab==='services'&&<ServicesAdmin language={language}/>}
+        <div className="workspace-content">
           
           {/* 1. DASHBOARD OVERVIEW */}
           {activeTab === 'overview' && (

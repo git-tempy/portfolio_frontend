@@ -1,0 +1,16 @@
+.animos-focus-dialog{position:fixed;inset:auto;top:50%;left:50%;transform:translate(-50%,-50%);margin:0;width:min(1000px,calc(100vw - 24px),calc((94dvh - 110px)*var(--focus-ratio,1.096)));height:fit-content;max-height:94dvh;padding:18px;overflow:auto;border:1px solid var(--border);border-radius:22px;background:var(--glass);backdrop-filter:blur(24px) saturate(150%);color:var(--text-primary);box-shadow:0 28px 100px #0007}
+.animos-focus-dialog[open]{display:block;animation:project-focus-enter .3s ease-out}
+.animos-focus-dialog::backdrop{background:#0009;backdrop-filter:blur(12px)}
+.animos-focus-dialog header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+.animos-focus-dialog h2{font-size:18px;line-height:1.3;margin:0}
+.animos-focus-dialog header>button{display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:var(--glass);color:var(--text-primary);cursor:pointer}
+.intrinsic-focus-stage{position:relative;width:100%;min-height:0}
+.focus-main-slot{position:absolute;left:0;top:0;height:100%;touch-action:pan-y}
+.focus-scroll-rail{position:absolute;right:0;top:0;width:24%;height:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin;scrollbar-color:#ffffff40 transparent;overscroll-behavior:contain;touch-action:pan-y;padding-right:3px}
+.animos-focus-tile{position:relative;display:block;width:100%;height:auto;padding:0;flex:none;border:0;border-radius:8px;overflow:hidden;background:transparent;cursor:pointer}
+.focus-main-slot .animos-focus-tile{height:100%}
+.animos-focus-tile img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.animos-focus-dialog button:focus-visible{outline:2px solid var(--primary-lime);outline-offset:2px}
+@keyframes project-focus-enter{from{opacity:0}to{opacity:1}}
+@media(max-width:600px){.animos-focus-dialog{padding:12px;border-radius:16px}.animos-focus-dialog h2{font-size:15px}.animos-focus-dialog header{gap:10px;margin-bottom:10px}.focus-scroll-rail{gap:4px;padding-right:2px}}
+@media(prefers-reduced-motion:reduce){.animos-focus-dialog[open]{animation:none}}

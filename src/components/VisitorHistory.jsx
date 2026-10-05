@@ -16,15 +16,16 @@ function location(row,language,t){
  const uzCountries={UZ:'O‘zbekiston',US:'AQSH',RU:'Rossiya',JP:'Yaponiya',TR:'Turkiya',KZ:'Qozog‘iston',KG:'Qirg‘iziston',TJ:'Tojikiston',KR:'Janubiy Koreya',CN:'Xitoy',GB:'Buyuk Britaniya',DE:'Germaniya',FR:'Fransiya',IN:'Hindiston',AE:'Birlashgan Arab Amirliklari'};
  if(language==='UZ'&&uzCountries[row.country_code])country=uzCountries[row.country_code];
  const tashkent={UZ:'Toshkent',ENG:'Tashkent',RU:'Ташкент',JP:'タシケント'}[language];
- const region=row.country_code==='UZ'&&row.region==='TK'?tashkent:row.country_code==='UZ'&&regions[row.region]?regions[row.region]:row.region;
+ const regionCode=(row.region||'').replace(/^UZ-/i,'').toUpperCase();
+ const region=row.country_code==='UZ'&&regionCode==='TK'?tashkent:row.country_code==='UZ'&&regions[regionCode]?regions[regionCode]:row.region;
  const city=/^(Tashkent|Toshkent)$/i.test(row.city||'')?tashkent:row.city;
  return [country,region,city].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(', ')||t.unknown;
 }
 export default function VisitorHistory({language}){
  const t=copy[language]||copy.ENG;
- const [filter,setFilter]=useState(null),[page,setPage]=useState(0),[rows,setRows]=useState([]),[more,setMore]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(false);
+ const [filter,setFilter]=useState(null),[page,setPage]=useState(0),[rows,setRows]=useState([]),[more,setMore]=useState(false),[busy,setBusy]=useState(true),[error,setError]=useState(false);
  useEffect(()=>{
-  let current=true;setBusy(true);setError(false);
+  let current=true;
   const query=new URLSearchParams({visits_page:String(page)});if(filter)query.set('visits_device',filter);
   adminFetch(window.API_BASE_URL+'/api/dashboard/stats/?'+query).then(r=>r.json()).then(data=>{if(current){setRows(old=>page?[...old,...data.visitor_entries]:data.visitor_entries||[]);setMore(!!data.visitor_entries_more);}}).catch(()=>{if(current)setError(true);}).finally(()=>{if(current)setBusy(false);});
   return()=>{current=false;};
@@ -32,9 +33,8 @@ export default function VisitorHistory({language}){
  const [editing,setEditing]=useState(null),[nickname,setNickname]=useState(''),[saving,setSaving]=useState(false);
  const nicknameLabels={UZ:['Nickname','Saqlash','Bekor qilish'],ENG:['Nickname','Save','Cancel'],RU:['Псевдоним','Сохранить','Отмена'],JP:['ニックネーム','保存','キャンセル']}[language]||['Nickname','Save','Cancel'];
  const saveNickname=async()=>{setSaving(true);setError(false);try{const response=await adminFetch(window.API_BASE_URL+'/api/devices/'+editing+'/nickname/',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({nickname})});if(!response.ok)throw Error();const data=await response.json();setRows(items=>items.map(item=>item.device_id===editing?{...item,nickname:data.nickname}:item));setEditing(null);}catch{setError(true);}finally{setSaving(false);}};
- const select=id=>{setRows([]);setPage(0);setFilter(id);};
+ const select=id=>{setBusy(true);setError(false);setRows([]);setPage(0);setFilter(id);};
  return <div className="dashboard-devices-box glass-panel"><h3>{t.title}</h3>{filter&&<button className="text-button" onClick={()=>select(null)}>{t.back}</button>}
- <div className="device-table-scroll"><table className="device-table"><thead><tr><th>ID</th><th>{nicknameLabels[0]}</th><th>{t.device}</th><th>{t.address}</th><th>IP</th><th>{t.date}</th><th>{t.all}</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td><code>{({desktop:'D',mobile:'M',tablet:'P'}[row.device_type]||'U')+String(row.short_id).padStart(4,'0')}</code></td><td>{editing===row.device_id?<form onSubmit={e=>{e.preventDefault();saveNickname();}}><input aria-label={nicknameLabels[0]} value={nickname} maxLength={80} onChange={e=>setNickname(e.target.value)} disabled={saving}/><button disabled={saving}>{nicknameLabels[1]}</button><button type="button" onClick={()=>setEditing(null)}>{nicknameLabels[2]}</button></form>:<button className="text-button" onClick={()=>{setEditing(row.device_id);setNickname(row.nickname||'');}}>{row.nickname||'+ '+nicknameLabels[0]}</button>}</td><td>{deviceLabel(row.device_type,language)}</td><td>{location(row,language,t)}</td><td>{row.ip_address||'—'}</td><td>{new Date(row.created_at).toLocaleString(locale[language])}</td><td><button className="text-button" onClick={()=>select(row.device_id)} disabled={filter===row.device_id}>{t.all}</button></td></tr>)}</tbody></table></div>
- {error&&<p role="alert">{t.failed}</p>}{busy&&<p role="status">{t.loading}</p>}{!busy&&!error&&!rows.length&&<p>{t.empty}</p>}{more&&<button className="text-button" disabled={busy} onClick={()=>setPage(p=>p+1)}>{t.more}</button>}<p className="muted">{t.note}</p></div>;
+ <div className="device-table-scroll"><table className="device-table"><thead><tr><th>ID</th><th>{nicknameLabels[0]}</th><th>{t.device}</th><th>{t.address}</th><th>IP</th><th>{t.date}</th><th>{t.all}</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td><code>{({desktop:'D',mobile:'M',tablet:'P'}[row.device_type]||'U')+String(row.short_id).padStart(4,'0')}</code></td><td>{editing===row.device_id?<form onSubmit={e=>{e.preventDefault();saveNickname();}}><input aria-label={nicknameLabels[0]} value={nickname} maxLength={80} onChange={e=>setNickname(e.target.value)} disabled={saving}/><button disabled={saving}>{nicknameLabels[1]}</button><button type="button" onClick={()=>setEditing(null)}>{nicknameLabels[2]}</button></form>:<button className="text-button" onClick={()=>{setEditing(row.device_id);setNickname(row.nickname||'');}}>{row.nickname||'+ '+nicknameLabels[0]}</button>}</td><td>{deviceLabel(row.device_type,language)}</td><td title={t.note}>{(row.country_code||row.region||row.city)?'≈ ':''}{location(row,language,t)}</td><td>{row.ip_address||'—'}</td><td>{new Date(row.created_at).toLocaleString(locale[language])}</td><td><button className="text-button" onClick={()=>select(row.device_id)} disabled={filter===row.device_id}>{t.all}</button></td></tr>)}</tbody></table></div>
+ {error&&<p role="alert">{t.failed}</p>}{busy&&<p role="status">{t.loading}</p>}{!busy&&!error&&!rows.length&&<p>{t.empty}</p>}{more&&<button className="text-button" disabled={busy} onClick={()=>{setBusy(true);setError(false);setPage(p=>p+1);}}>{t.more}</button>}<p className="muted">{t.note}</p></div>;
 }
-
