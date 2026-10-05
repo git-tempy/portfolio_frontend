@@ -14,3 +14,16 @@
 @keyframes project-focus-enter{from{opacity:0}to{opacity:1}}
 @media(max-width:600px){.animos-focus-dialog{padding:12px;border-radius:16px}.animos-focus-dialog h2{font-size:15px}.animos-focus-dialog header{gap:10px;margin-bottom:10px}.focus-scroll-rail{gap:4px;padding-right:2px}}
 @media(prefers-reduced-motion:reduce){.animos-focus-dialog[open]{animation:none}}
+.project-loading-dialog{position:fixed;inset:auto;top:50%;left:50%;transform:translate(-50%,-50%);margin:0;width:min(400px,calc(100vw - 32px));height:auto;padding:24px;border:1px solid var(--border);border-radius:20px;background:var(--glass);color:var(--text-primary);backdrop-filter:blur(24px) saturate(150%)}
+.project-loading-dialog::backdrop{background:#0009;backdrop-filter:blur(12px)}
+.project-loading-dialog>.icon-button{margin-left:auto;display:flex}
+.project-loading-dialog .content-loading{min-height:72px;margin-top:12px}
+@media(max-width:600px){
+ .animos-focus-dialog{width:calc(100vw - 24px);max-width:100%;max-height:94dvh}
+ .intrinsic-focus-stage{display:flex;flex-direction:column;gap:10px;aspect-ratio:auto!important}
+ .focus-main-slot{position:relative;width:100%!important;height:auto;aspect-ratio:var(--image-ratio);max-height:calc(94dvh - 190px)}
+ .focus-main-slot .animos-focus-tile{height:100%;max-height:calc(94dvh - 190px)}
+ .focus-scroll-rail{position:relative;display:flex;flex-direction:row;width:100%;height:auto;max-height:100px;overflow-x:auto;overflow-y:hidden;padding:0 0 4px;gap:8px;touch-action:pan-x}
+ .focus-scroll-rail .animos-focus-tile{width:auto;height:80px;flex:0 0 auto}
+ .focus-scroll-rail:empty{display:none}
+}

@@ -21,8 +21,8 @@ export default function FocusShowcase({project,language,onClose}){
  };
  return <dialog ref={ref} className="animos-focus-dialog intrinsic-focus-dialog" style={{'--focus-ratio':ratio/mainWidth}} aria-label={title} onCancel={e=>{e.preventDefault();onClose();}} onKeyDown={e=>{if(e.key==='ArrowRight'){e.preventDefault();change(1);}if(e.key==='ArrowLeft'){e.preventDefault();change(-1);}}}>
   <header><h2>{title}</h2><button autoFocus aria-label={t.close} onClick={onClose}><X/></button></header>
-  <LayoutGroup id={group}><div className="animos-focus-stage intrinsic-focus-stage" style={{aspectRatio:ratio/mainWidth}}>
-   <div className="focus-main-slot" style={{width:(mainWidth*100)+'%'}} onTouchStart={e=>{touch.current={x:e.touches[0].clientX,y:e.touches[0].clientY};}} onTouchEnd={e=>{if(!touch.current)return;const dx=e.changedTouches[0].clientX-touch.current.x,dy=e.changedTouches[0].clientY-touch.current.y;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3)change(dx<0?1:-1);touch.current=null;}}>{items.length>0&&tile(index,true)}</div>
+  <LayoutGroup id={group}><div className="animos-focus-stage intrinsic-focus-stage" style={{aspectRatio:ratio/mainWidth,'--image-ratio':ratio}}>
+   <div className="focus-main-slot" style={{width:(mainWidth*100)+'%', '--image-ratio':ratio}} onTouchStart={e=>{touch.current={x:e.touches[0].clientX,y:e.touches[0].clientY};}} onTouchEnd={e=>{if(!touch.current)return;const dx=e.changedTouches[0].clientX-touch.current.x,dy=e.changedTouches[0].clientY-touch.current.y;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3)change(dx<0?1:-1);touch.current=null;}}>{items.length>0&&tile(index,true)}</div>
    <div className="focus-scroll-rail" aria-label={t.gallery}>{others.map(i=>tile(i,false))}</div>
   </div></LayoutGroup>
  </dialog>;

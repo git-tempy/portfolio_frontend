@@ -8,6 +8,8 @@ import ContentState from './ContentState';
 import MediaViewer from './MediaViewer';
 import Reveal from './Reveal';
 import ExperienceProcess from './ExperienceProcess';
+import SubsectionTitle from './SubsectionTitle';
+import EducationLinks from './EducationLinks';
 
 function TraitIcon({trait}) {
  const text=(trait.text_en||trait.text||'').toLowerCase();
@@ -37,7 +39,7 @@ export function AboutSection({ language, state }) {
 export function EducationSection({ language }) {
   const state=useContent('/api/education/',language), [expanded,setExpanded]=useState(null);
   const items=Array.isArray(state.data)?state.data:[];
-  return <section className="section section-compact" id="education"><div className="container"><SectionTitle index="02" label={(locales[language]||locales.ENG).nav.education} title={(locales[language]||locales.ENG).nav.education}/><ContentState state={state} language={language} empty={!items.length}/><div className="education-stack">{items.map(item=><Reveal className="education-row glass" key={item.id}><button className="education-toggle" aria-expanded={expanded===item.id} onClick={()=>setExpanded(expanded===item.id?null:item.id)}><span className="education-symbol">{item.logo?<img src={item.logo} alt="" loading="lazy"/>:<GraduationCap/>}</span><span><strong>{localized(item,'name',language)}</strong><small>{localizedPeriod(item.period,language)}</small></span>{expanded===item.id?<Minus size={19}/>:<Plus size={19}/>}</button>{expanded===item.id&&<p className="education-description">{localized(item,'description',language)}</p>}</Reveal>)}</div></div></section>;
+  return <section className="section section-compact" id="education"><div className="container"><SectionTitle index="02" label={(locales[language]||locales.ENG).nav.education} title={(locales[language]||locales.ENG).nav.education}/><ContentState state={state} language={language} empty={!items.length}/><div className="education-stack">{items.map(item=><Reveal className="education-row glass" key={item.id}><button className="education-toggle" aria-expanded={expanded===item.id} onClick={()=>setExpanded(expanded===item.id?null:item.id)}><span className="education-symbol">{item.logo?<img src={item.logo} alt="" loading="lazy"/>:<GraduationCap/>}</span><span><strong>{localized(item,'name',language)}</strong><small>{localizedPeriod(item.period,language)}</small></span>{expanded===item.id?<Minus size={19}/>:<Plus size={19}/>}</button>{expanded===item.id&&<><p className="education-description">{localized(item,'description',language)}</p><EducationLinks links={item.links} language={language}/></>}</Reveal>)}</div></div></section>;
 }
 export function CertificatesSection({ language }) {
   const state=useContent('/api/certificates/',language),[selected,setSelected]=useState(null);
@@ -48,15 +50,15 @@ export function SkillsSection({ language }) {
   const state=useContent('/api/skills/',language), traitsState=useContent('/api/traits/',language);
   const items=Array.isArray(state.data)?state.data:[],traits=Array.isArray(traitsState.data)?traitsState.data:[];
   const t=(locales[language]||locales.ENG).skills;
-  const skillGroup = type => items.some(s=>s.type===type)&&<div className="skills-group"><h3 className="subheading">{type==='Software'?t.software:t.personal}</h3><div className={type==='Software'?'tool-grid':'personal-grid'}>{items.filter(s=>s.type===type).map((s,i)=><Reveal className="tool-card glass" key={s.id} scale={type==='Software'?.9:1} y={type==='Software'?0:20} duration={.4} delay={i*(type==='Software'?.05:.06)}><span className={'tool-symbol tool-color-'+i%6}>{s.image?<img src={s.image} alt="" loading="lazy"/>:type==='Personal'?['✦','◎','◈','✱'][i%4]:s.name.toLowerCase().includes('photoshop')?'Ps':s.name.toLowerCase().includes('illustrator')?'Ai':s.name.toLowerCase().includes('framer')?'Fr':s.name.slice(0,1)}</span><span>{localized(s,'name',language)}</span></Reveal>)}</div></div>;
+  const skillGroup = type => items.some(s=>s.type===type)&&<div className="skills-group"><SubsectionTitle index={type==='Software'?'03.1':'03.3'} title={type==='Software'?t.software:t.personal}/><div className={type==='Software'?'tool-grid':'personal-grid'}>{items.filter(s=>s.type===type).map((s,i)=><Reveal className="tool-card glass" key={s.id} scale={type==='Software'?.9:1} y={type==='Software'?0:20} duration={.4} delay={i*(type==='Software'?.05:.06)}><span className={'tool-symbol tool-color-'+i%6}>{s.image?<img src={s.image} alt="" loading="lazy"/>:type==='Personal'?['✦','◎','◈','✱'][i%4]:s.name.toLowerCase().includes('photoshop')?'Ps':s.name.toLowerCase().includes('illustrator')?'Ai':s.name.toLowerCase().includes('framer')?'Fr':s.name.slice(0,1)}</span><span>{localized(s,'name',language)}</span></Reveal>)}</div></div>;
   return <section className="section" id="skills"><div className="container">
-    <SectionTitle index="03" label={textFor(language).tools} title={t.title}/>
+    <SectionTitle index="03" label={t.title} title={t.title}/>
     <ContentState state={state} language={language} empty={!items.length}/>
     {skillGroup('Software')}
     <Services language={language}/>
     {skillGroup('Personal')}
     <ContentState state={traitsState} language={language}/>
-    {traits.length>0&&<div className="personal-traits">{!items.some(s=>s.type==='Personal')&&<h3 className="subheading">{t.personal}</h3>}<div className="traits-grid">{['Strength','Weakness'].map(type=><div key={type}><h3 className="subheading">{type==='Strength'?t.strengthsTitle:t.weaknessesTitle}</h3>{traits.filter(s=>s.type===type).map((s,i)=><Reveal className="trait-row glass" key={s.id} x={type==='Strength'?-20:20} y={0} duration={.4} delay={i*.06}><span className="accent"><TraitIcon trait={s}/></span><span className="trait-text">{localized(s,'text',language)}</span></Reveal>)}</div>)}</div></div>}
+    {traits.length>0&&<div className="personal-traits">{!items.some(s=>s.type==='Personal')&&<SubsectionTitle index="03.3" title={t.personal}/>}<div className="traits-grid">{['Strength','Weakness'].map(type=><div key={type}><h3 className="subheading">{type==='Strength'?t.strengthsTitle:t.weaknessesTitle}</h3>{traits.filter(s=>s.type===type).map((s,i)=><Reveal className="trait-row glass" key={s.id} x={type==='Strength'?-20:20} y={0} duration={.4} delay={i*.06}><span className="accent"><TraitIcon trait={s}/></span><span className="trait-text">{localized(s,'text',language)}</span></Reveal>)}</div>)}</div></div>}
   </div></section>;
 }
 export function ExperienceSection({ language }) {

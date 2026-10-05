@@ -1,3 +1,4 @@
+import EducationLinksEditor from './EducationLinksEditor';
 import VisitorChart from './VisitorChart';
 import VisitorHistory from './VisitorHistory';
 import ServicesAdmin from './ServicesAdmin';
@@ -839,6 +840,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       description_ru: item.description_ru || '',
       description_en: item.description_en || '',
       description_jp: item.description_jp || '',
+      links: item.links || [],
       logo: null,
       logoName: item.logo ? item.logo.split('/').pop() : ''
     });
@@ -874,6 +876,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     formData.append('description_en', educationForm.description_en.trim());
     formData.append('description_jp', educationForm.description_jp.trim());
     formData.append('description', educationForm.description_uz.trim());
+    formData.append('links', JSON.stringify(educationForm.links || []));
     if (educationForm.logo) {
       formData.append('logo', educationForm.logo);
     } else if (educationForm.imageRemoved) formData.append('logo', '');
@@ -1047,8 +1050,16 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     }
     if (activeTab === 'resume-downloads') {
       adminFetch(window.API_BASE_URL + '/api/resume-downloads/')
-        .then(res => res.json())
-        .then(data => setDownloads(data))
+        .then(res => {if(!res.ok)throw Error('Could not load downloads');return res.json();})
+        .then(async data => {
+          setDownloads(data);
+          const results = await Promise.all(data.filter(item=>!item.is_read).map(async item=>{
+            const res=await adminFetch(window.API_BASE_URL+'/api/resume-downloads/'+item.id+'/',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_read:true})});
+            return res.ok?item.id:null;
+          }));
+          const read=new Set(results.filter(Boolean));
+          setDownloads(current=>current.map(item=>read.has(item.id)?{...item,is_read:true}:item));
+        })
         .catch(err => console.error('Error loading resume downloads:', err));
     }
   }, [activeTab]);
@@ -1251,8 +1262,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
             onClick={() => { setMobileSidebarOpen(false); setActiveTab('resume-downloads'); }}
           >
             <Download size={18} />
-            {downloads.length > 0 && (
-              <span className="badge-downloads-count">{downloads.length}</span>
+            {downloads.some(download=>!download.is_read) && (
+              <span className="badge-downloads-count">{downloads.filter(download=>!download.is_read).length}</span>
             )}
             <span>{t.sidebar.resumeDownloads}</span>
           </button>
@@ -2008,7 +2019,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                       rel="noopener noreferrer" 
                       style={{ color: 'var(--primary-lime)', textDecoration: 'underline', fontWeight: '600' }}
                     >
-                      Ko'rish ({dbAbout.resume_pdf.split('/').pop()})
+                      {tr("Rezyumeni ko‘rish","View résumé")}
                     </a>
                   </div>
                 )}
@@ -3013,6 +3024,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   />
                 </div>
               </div>
+
+              <EducationLinksEditor language={language} value={educationForm.links || []} onChange={links=>setEducationForm(current=>({...current,links}))}/>
 
               {/* Action Buttons */}
               <div className="admin-modal-actions">

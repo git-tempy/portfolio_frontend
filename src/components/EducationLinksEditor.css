@@ -1,0 +1,10 @@
+.education-links-editor{margin:24px 0;padding:20px;border:1px solid var(--border);border-radius:16px}
+.education-links-editor header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.education-links-editor h4{margin:0}.education-links-editor p{font-size:13px;color:var(--text-secondary);margin:12px 0}
+.education-links-editor fieldset{min-width:0;border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px}
+.education-link-target{display:grid;grid-template-columns:160px minmax(0,1fr) 40px;align-items:end;gap:12px}
+.education-link-labels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.education-links-editor label{display:grid;gap:6px;font-size:12px}
+.education-links-editor input,.education-links-editor select{width:100%;min-width:0;background:var(--glass);color:var(--text-primary);border:1px solid var(--border);border-radius:8px;padding:10px}
+.education-link-target button{margin:0;width:40px;height:40px}
+@media(max-width:600px){.education-links-editor{padding:14px}.education-link-target{grid-template-columns:minmax(0,1fr) 40px}.education-link-target select{grid-column:1/-1}.education-link-labels{grid-template-columns:1fr}}
