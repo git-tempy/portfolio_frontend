@@ -384,3 +384,15 @@ body{overflow-x:clip}
  .education-links{padding:0 18px 20px;gap:12px;font-size:13px}
 }
 @media(max-width:360px){.site-header,.site-header.is-scrolled{padding-inline:12px}.nav-shell{padding-inline:10px}.brand{font-size:22px}.nav-tools{gap:3px}.nav-tools>.icon-button{width:34px;height:34px}}
+@media(max-width:600px){
+ .journey{gap:20px}
+ .journey::before,.journey-marker{display:none}
+ .journey-row,.journey-row:nth-child(even){width:100%;margin:0;padding:0}
+ .journey-card{padding:22px;border-radius:22px}
+ .journey-top{grid-template-columns:minmax(0,1fr) 90px;gap:10px 16px}
+ .journey-top .journey-date{align-self:start;padding-top:4px}
+ .journey-top .experience-process{grid-row:1/3;align-self:center}
+ .journey-top h3{grid-column:1;grid-row:2;align-self:start;font-size:18px;line-height:1.35}
+ .journey-top .journey-company{grid-row:3;margin-top:0;padding-top:4px}
+ .journey-card p{padding-top:14px;margin-top:14px;border-top:1px solid var(--glass-border,rgba(255,255,255,.1));font-size:14px;line-height:1.7}
+}
