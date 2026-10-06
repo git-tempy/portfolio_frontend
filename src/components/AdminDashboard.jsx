@@ -253,6 +253,9 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
   // Modal Overlays state
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [savingCategory, setSavingCategory] = useState(false);
+  const [categoryError, setCategoryError] = useState('');
   const [newCategoryNameUz, setNewCategoryNameUz] = useState('');
   const [newCategoryNameRu, setNewCategoryNameRu] = useState('');
   const [newCategoryNameEn, setNewCategoryNameEn] = useState('');
@@ -451,6 +454,16 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
   // Missing Handlers
   const handleAddCategory = () => {
+    setEditingCategory(null); setCategoryError('');
+    setNewCategoryNameUz(''); setNewCategoryNameRu(''); setNewCategoryNameEn(''); setNewCategoryNameJp('');
+    setShowCategoryModal(true);
+  };
+  const handleEditCategory = (category) => {
+    setEditingCategory(category); setCategoryError('');
+    setNewCategoryNameUz(category.name_uz || category.name || '');
+    setNewCategoryNameRu(category.name_ru || '');
+    setNewCategoryNameEn(category.name_en || '');
+    setNewCategoryNameJp(category.name_jp || '');
     setShowCategoryModal(true);
   };
 
@@ -522,10 +535,11 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
   const handleCategorySubmit = async (e) => {
     e.preventDefault();
-    if (!newCategoryNameUz.trim()) return;
+    if (!newCategoryNameUz.trim() || savingCategory) return;
+    setSavingCategory(true); setCategoryError('');
     try {
-      const res = await adminFetch(window.API_BASE_URL + '/api/portfolio/categories/', {
-        method: 'POST',
+      const res = await adminFetch(window.API_BASE_URL + '/api/portfolio/categories/' + (editingCategory ? editingCategory.id + '/' : ''), {
+        method: editingCategory ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name_uz: newCategoryNameUz.trim(),
@@ -538,16 +552,18 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       });
       if (res.ok) {
         const data = await res.json();
-        setCategories([...categories, { ...data, count: 0 }]);
+        setCategories(items=>editingCategory ? items.map(item=>item.id===editingCategory.id ? {...item,...data} : item) : [...items,{...data,count:0}]);
+        if(editingCategory) setProjects(items=>items.map(item=>String(item.category_id)===String(editingCategory.id) ? {...item,category:data.name} : item));
         setShowCategoryModal(false);
         setNewCategoryNameUz('');
         setNewCategoryNameRu('');
         setNewCategoryNameEn('');
         setNewCategoryNameJp('');
       }
-    } catch (err) {
-      console.error('Error creating category:', err);
-    }
+    else { setCategoryError(tr('Kategoriyani saqlab bo‘lmadi. Qayta urinib ko‘ring.','Could not save category. Please try again.')); }
+    } catch {
+      setCategoryError(tr('Tarmoq xatoligi yuz berdi.','Network error occurred.'));
+    } finally { setSavingCategory(false); }
   };
 
   const handleAddProject = () => {
@@ -1440,7 +1456,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                           <span className="status-badge status-badge-new">{cat.status}</span>
                         </td>
                         <td className="col-actions">
-                          <button className="action-icon-btn edit-btn" title={tr("Tahrirlash","Edit")}>
+                          <button className="action-icon-btn edit-btn" title={tr("Tahrirlash","Edit")} onClick={()=>handleEditCategory(cat)}>
                             <Edit2 size={14} />
                           </button>
                           <button 
@@ -1485,7 +1501,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                     {projects.map((proj, idx) => (
                       <tr key={proj.id}>
                         <td className="col-id">#{idx + 1}</td>
-                        <td className="col-title">{proj.title}</td>
+                        <td className="col-title"><div className="admin-project-title">{proj.cover_image && <img src={proj.cover_image} alt="" loading="lazy" decoding="async" onError={event=>{event.currentTarget.hidden=true;}}/>}<span>{proj.title}</span></div></td>
                         <td className="col-cat"><span className="category-tag-badge">{proj.category}</span></td>
                         <td className="col-type">{proj.type==='pdf'?'PDF':textFor(language).image}</td>
                         <td className="col-actions">
@@ -2165,9 +2181,9 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
         <AdminDialog label={tr("Kategoriya","Category")} onClose={()=>setShowCategoryModal(false)}>
           <div className="admin-modal-card glass-panel alert-style-modal">
             <div className="admin-modal-header">
-              <h3>{tr("Yangi kategoriya qo'shish","Add New Category")}</h3>
+              <h3>{editingCategory ? tr("Kategoriyani tahrirlash","Edit Category") : tr("Yangi kategoriya qo'shish","Add New Category")}</h3>
             </div>
-            <form onSubmit={handleCategorySubmit} className="admin-modal-form">
+            <form onSubmit={handleCategorySubmit} className="admin-modal-form" aria-busy={savingCategory}>
               <div className="form-row-grid-2">
                 <div className="editor-input-group">
                   <label>UZ {tr("Kategoriya nomi","Category Name")}</label>
@@ -2210,8 +2226,9 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                   />
                 </div>
               </div>
+              {categoryError && <p className="upload-error" role="alert">{categoryError}</p>}
               <div className="admin-modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => {
+                <button type="button" className="cancel-btn" disabled={savingCategory} onClick={() => {
                   setShowCategoryModal(false);
                   setNewCategoryNameUz('');
                   setNewCategoryNameRu('');
@@ -2220,8 +2237,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 }}>
                   {tr("Bekor qilish","Cancel")}
                 </button>
-                <button type="submit" className="submit-btn" disabled={uploadingCover}>
-                  {tr("Qo'shish","Add")}
+                <button type="submit" className="submit-btn" disabled={savingCategory}>
+                  {editingCategory ? tr("Saqlash","Save") : tr("Qo'shish","Add")}
                 </button>
               </div>
             </form>
