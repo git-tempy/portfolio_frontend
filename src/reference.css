@@ -404,3 +404,8 @@ body{overflow-x:clip}
 .education-toggle>span:nth-child(2){min-width:0}
 .education-description,.education-links{padding-left:calc(var(--education-inset) + var(--education-icon) + var(--education-gap));padding-right:var(--education-inset)}
 @media(max-width:600px){.education-row{--education-inset:18px;--education-icon:40px;--education-gap:13px}}
+
+/* Uploaded portfolio covers keep their original proportions at every viewport. */
+.work-card .project-image-cover{display:block;aspect-ratio:auto}
+.work-card .project-image-cover>img{display:block;width:100%;height:auto;object-fit:contain;transform:none}
+.work-card:hover .project-image-cover>img{transform:none}

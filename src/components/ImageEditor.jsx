@@ -11,7 +11,7 @@ const labels={
 
 export default function ImageEditor({file,kind,language,onApply,onCancel}) {
   const t=labels[language]||labels.ENG, id=useId(), canvas=useRef(null), drag=useRef(null);
-  const [bitmap,setBitmap]=useState(null),[ratio,setRatio]=useState(kind==='portrait'?'1':kind==='cover'?'1.25':'original');
+  const [bitmap,setBitmap]=useState(null),[ratio,setRatio]=useState(kind==='portrait'?'1':'original');
   const [zoom,setZoom]=useState(1),[x,setX]=useState(50),[y,setY]=useState(50),[busy,setBusy]=useState(false),[error,setError]=useState('');
   useEffect(()=>{
     let active=true, loaded;
