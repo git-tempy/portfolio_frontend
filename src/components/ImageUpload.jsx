@@ -54,7 +54,8 @@ export default function ImageUpload({ value=[],onChange,onBusy,kind='gallery',la
     try {
       const source=new URL(src,location.href);
       const previewOrigin=import.meta.env.DEV&&import.meta.env.VITE_PREVIEW_MEDIA_ORIGIN;
-      const mediaUrl=previewOrigin&&source.origin===previewOrigin?'/__preview-media'+source.pathname+source.search:src;
+      const storageSource=source.protocol==='https:'&&source.hostname==='br-cold-sun-b1ney4xj.storage.c-5.eu-central-1.aws.neon.tech'&&source.pathname.startsWith('/portfolio-media/uploads/');
+      const mediaUrl=previewOrigin&&source.origin===previewOrigin?'/__preview-media'+source.pathname+source.search:storageSource&&!import.meta.env.DEV?'/api/image-source?url='+encodeURIComponent(source.href):src;
       const response=await fetch(mediaUrl,{signal:aborter.signal});
       if(!response.ok)throw new Error('Could not load image.');
       const blob=await response.blob();
