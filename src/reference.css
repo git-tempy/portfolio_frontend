@@ -396,3 +396,11 @@ body{overflow-x:clip}
  .journey-top .journey-company{grid-row:3;margin-top:0;padding-top:4px}
  .journey-card p{padding-top:14px;margin-top:14px;border-top:1px solid var(--glass-border,rgba(255,255,255,.1));font-size:14px;line-height:1.7}
 }
+
+/* Keep expanded education content on the same text column as its heading. */
+.education-row{--education-inset:24px;--education-icon:48px;--education-gap:20px}
+.education-toggle{padding:var(--education-inset);gap:var(--education-gap)}
+.education-symbol{width:var(--education-icon);height:var(--education-icon);flex:0 0 var(--education-icon)}
+.education-toggle>span:nth-child(2){min-width:0}
+.education-description,.education-links{padding-left:calc(var(--education-inset) + var(--education-icon) + var(--education-gap));padding-right:var(--education-inset)}
+@media(max-width:600px){.education-row{--education-inset:18px;--education-icon:40px;--education-gap:13px}}
