@@ -408,7 +408,13 @@ body{overflow-x:clip}
 .education-description,.education-links{padding-left:calc(var(--education-inset) + var(--education-icon) + var(--education-gap));padding-right:var(--education-inset)}
 @media(max-width:600px){.education-row{--education-inset:18px;--education-icon:40px;--education-gap:13px}}
 
-/* Uploaded portfolio covers keep their original proportions at every viewport. */
-.work-card .project-image-cover{display:block;aspect-ratio:auto}
-.work-card .project-image-cover>img{display:block;width:100%;height:auto;object-fit:contain;transform:none}
+/* Equal portfolio frames display every uploaded cover without cropping. */
+.work-card .project-image-cover{display:flex;aspect-ratio:4/3}
+.work-card .project-image-cover>img{display:block;width:100%;height:100%;object-fit:contain;transform:none}
 .work-card:hover .project-image-cover>img{transform:none}
+
+.work-grid{align-items:stretch}
+.work-grid>.project-card{align-self:stretch;display:flex;flex-direction:column}
+.project-card>.work-card-link{display:flex;flex-direction:column;flex:1;height:100%}
+.project-card .work-cover{flex:none}
+.project-card .work-info{flex:1}
