@@ -19,3 +19,17 @@
 
 .single-image-preview{display:block}.single-image-preview .upload-preview{max-width:440px;margin:auto;padding:12px}.single-image-preview .upload-preview>img{height:auto;max-height:360px;object-fit:contain}.single-image-actions{flex-wrap:wrap}.single-image-actions button{flex:1;gap:5px;padding:8px;font-size:11px;height:auto!important;min-height:40px}.single-image-actions button:last-child{margin-left:0!important}
 .profile-save-status{display:flex;gap:8px;align-items:center;padding:12px 16px;border:1px solid var(--primary-lime);border-radius:12px;color:var(--text-primary);margin:14px 0;animation:profile-saved-in .3s ease-out}.profile-save-status svg{color:var(--primary-lime)}@keyframes profile-saved-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.profile-save-status{animation:none}}
+
+.existing-project-gallery{grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:16px}
+.existing-project-image{min-width:0}
+.gallery-order-actions{display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px}
+.gallery-order-actions button{display:grid;place-items:center;width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--glass);color:var(--text-primary)}
+.gallery-order-actions button:disabled{opacity:.35}
+.existing-project-gallery .single-image-preview .upload-preview{max-width:none;margin:0}
+.existing-project-gallery .upload-preview>img{height:180px;max-height:180px;width:100%;object-fit:contain}
+.existing-project-gallery .single-image-actions{display:grid;grid-template-columns:1fr;gap:6px}
+.existing-project-gallery .single-image-actions button{width:100%;min-width:0;white-space:normal;gap:6px;line-height:1.25;padding:9px 10px}
+
+.project-pdf-upload{padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--input-bg)}
+.project-pdf-summary{display:flex;align-items:center;gap:12px;min-width:0}.project-pdf-summary>div{min-width:0}.project-pdf-summary strong{font-size:14px}.project-pdf-summary small{display:block;overflow-wrap:anywhere;color:var(--text-secondary);font-size:12px;margin-top:4px}
+.project-pdf-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.project-pdf-actions>a,.project-pdf-actions>button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:9px 13px;border:1px solid var(--border);border-radius:8px;background:var(--glass);color:var(--text-primary);font-size:12px;text-decoration:none}

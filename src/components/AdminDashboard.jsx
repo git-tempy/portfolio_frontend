@@ -33,6 +33,7 @@ import {
 import './AdminDashboard.css';
 import { adminFetch } from '../lib/adminApi';
 import ImageUpload from './ImageUpload';
+import ProjectPdfUpload from './ProjectPdfUpload';
 import { localPreviewEnabled, saveLocalProfile, publishLocalPreview } from '../lib/localPreview';
 import './AdminRefresh.css';
 import AdminDialog from './AdminDialog';
@@ -586,6 +587,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       type: proj.type || 'pdf',
       file: null,
       fileName: proj.file ? proj.file.split('/').pop() : '',
+      fileRemoved: false,
       coverImage: null,
       coverImageName: proj.cover_image ? proj.cover_image.split('/').pop() : '',
       description_uz: proj.description_uz || proj.description || '',
@@ -650,7 +652,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       });
     } else if (projectForm.file) {
       formData.append('file', projectForm.file);
-    }
+    } else if (projectForm.fileRemoved) formData.append('file', '');
     if (projectForm.coverImage) {
       formData.append('cover_image', projectForm.coverImage);
     } else if (projectForm.imageRemoved) formData.append('cover_image', '');
@@ -2315,8 +2317,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
               <div className="editor-input-group upload-input-group">
                 <label>{projectForm.type === 'pdf' ? tr('PDF hujjat','PDF document') : (tr("Loyiha rasmlari","Project images"))}</label>
-                {projectForm.type === 'pdf' ? <input type="file" accept="application/pdf" onChange={e => { const file=e.target.files[0]; if(file && (file.type!=='application/pdf'||file.size>25*1024*1024)){setProjectError('Choose a PDF smaller than 25 MB.');e.target.value='';return;} setProjectError('');setProjectForm(p=>({...p,file:file||null,fileName:file?.name||''})); }} /> : <ImageUpload key="gallery" value={projectForm.files||[]} language={language} onBusy={setUploadingImages} onChange={files=>setProjectForm(p=>({...p,files,fileName:files.length+' images'}))}/>}
-                {editingProject && projectForm.type==='image' && <div className="upload-previews">{(projectForm.keptImages||[]).map((image,index)=><div key={image.id}><button type="button" disabled={index===0} aria-label="Move image earlier" onClick={()=>setProjectForm(form=>{const keptImages=[...form.keptImages];[keptImages[index-1],keptImages[index]]=[keptImages[index],keptImages[index-1]];return {...form,keptImages};})}>←</button><button type="button" disabled={index===(projectForm.keptImages||[]).length-1} aria-label="Move image later" onClick={()=>setProjectForm(form=>{const keptImages=[...form.keptImages];[keptImages[index+1],keptImages[index]]=[keptImages[index],keptImages[index+1]];return {...form,keptImages};})}>→</button><ImageUpload key={image.id} kind="gallery" singleImage language={language} existing={[image.image]} onBusy={setUploadingImages} onChange={files=>setProjectForm(form=>({...form,keptImages:form.keptImages.filter(item=>item.id!==image.id),files:[...(form.files||[]),...files]}))}/></div>)}</div>}
+                {projectForm.type === 'pdf' ? <ProjectPdfUpload language={language} file={projectForm.file} existing={editingProject?.file} removed={projectForm.fileRemoved} disabled={savingProject} onChange={file=>{if(file&&(file.type!=='application/pdf'||file.size>25*1024*1024)){setProjectError('Choose a PDF smaller than 25 MB.');return;}setProjectError('');setProjectForm(p=>({...p,file,fileRemoved:false,fileName:file?.name||''}));}} onRemove={()=>setProjectForm(p=>({...p,file:null,fileRemoved:true,fileName:''}))}/> : <ImageUpload key="gallery" value={projectForm.files||[]} language={language} onBusy={setUploadingImages} onChange={files=>setProjectForm(p=>({...p,files,fileName:files.length+' images'}))}/>}
+                {editingProject && projectForm.type==='image' && <div className="upload-previews existing-project-gallery">{(projectForm.keptImages||[]).map((image,index)=><div className="existing-project-image" key={image.id}><div className="gallery-order-actions"><button type="button" disabled={index===0} aria-label="Move image earlier" onClick={()=>setProjectForm(form=>{const keptImages=[...form.keptImages];[keptImages[index-1],keptImages[index]]=[keptImages[index],keptImages[index-1]];return {...form,keptImages};})}>←</button><button type="button" disabled={index===(projectForm.keptImages||[]).length-1} aria-label="Move image later" onClick={()=>setProjectForm(form=>{const keptImages=[...form.keptImages];[keptImages[index+1],keptImages[index]]=[keptImages[index],keptImages[index+1]];return {...form,keptImages};})}>→</button></div><ImageUpload key={image.id} kind="gallery" singleImage language={language} existing={[image.image]} onBusy={setUploadingImages} onChange={files=>setProjectForm(form=>({...form,keptImages:form.keptImages.filter(item=>item.id!==image.id),files:[...(form.files||[]),...files]}))}/></div>)}</div>}
 
               </div>
               <div className="editor-input-group upload-input-group">
