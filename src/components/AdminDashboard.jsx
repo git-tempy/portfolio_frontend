@@ -2327,49 +2327,6 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               </div>
               {projectError && <p className="upload-error" role="alert">{projectError}</p>}
 
-              {/* Description */}
-              <div className="form-row-grid-2">
-                <div className="editor-input-group">
-                  <label>UZ {tr("Tavsif","Description")}</label>
-                  <textarea 
-                    rows={2}
-                    placeholder={textFor(language).enterText}
-                    value={projectForm.description_uz}
-                    onChange={(e) => setProjectForm({ ...projectForm, description_uz: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="editor-input-group">
-                  <label>RU {tr("Tavsif","Description")}</label>
-                  <textarea 
-                    rows={2}
-                    placeholder={textFor(language).enterText}
-                    value={projectForm.description_ru}
-                    onChange={(e) => setProjectForm({ ...projectForm, description_ru: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="form-row-grid-2">
-                <div className="editor-input-group">
-                  <label>ENG {tr("Tavsif","Description")}</label>
-                  <textarea 
-                    rows={2}
-                    placeholder={textFor(language).enterText}
-                    value={projectForm.description_en}
-                    onChange={(e) => setProjectForm({ ...projectForm, description_en: e.target.value })}
-                  />
-                </div>
-                <div className="editor-input-group">
-                  <label>JP {tr("Tavsif","Description")}</label>
-                  <textarea 
-                    rows={2}
-                    placeholder={textFor(language).enterText}
-                    value={projectForm.description_jp}
-                    onChange={(e) => setProjectForm({ ...projectForm, description_jp: e.target.value })}
-                  />
-                </div>
-              </div>
-
               {/* Hashtags split inputs */}
               <div className="hashtags-dual-inputs">
                 <div className="editor-input-group">
