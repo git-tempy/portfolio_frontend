@@ -426,3 +426,9 @@ body{overflow-x:clip}
 @media(prefers-reduced-motion:reduce){.project-cover-slides>img{transition:none}}
 
 .skill-image-fallback{display:grid;place-items:center;width:100%;height:100%;font-size:clamp(28px,5vw,64px);font-weight:700;color:var(--primary-lime);background:var(--surface-hover);border-radius:16px}
+
+/* Uploaded university artwork uses its own colors instead of the fallback icon tile. */
+.education-row{--education-icon:56px}
+.education-symbol.education-logo,[data-theme=light] .education-symbol.education-logo{background:transparent;border:0;border-radius:0;padding:0}
+.education-logo>img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;border-radius:0}
+@media(max-width:600px){.education-row{--education-icon:48px}}
