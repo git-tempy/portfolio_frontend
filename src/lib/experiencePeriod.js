@@ -1,0 +1,5 @@
+export const periodLocale=language=>({UZ:'uz-Latn-UZ',RU:'ru-RU',ENG:'en-GB',JP:'ja-JP'})[language]||'en-GB';
+export const monthOptions=language=>Array.from({length:12},(_,index)=>({value:String(index+1).padStart(2,'0'),label:new Intl.DateTimeFormat(periodLocale(language),{month:'long',timeZone:'UTC'}).format(new Date(Date.UTC(2024,index,1)))}));
+export const formatMonthPeriod=(value,language)=>String(value||'').replace(/\b(\d{4})-(0[1-9]|1[0-2])\b/g,(_,year,month)=>new Intl.DateTimeFormat(periodLocale(language),{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(Number(year),Number(month)-1,1))));
+export function experiencePeriod(form){const start=form.startYear+(form.startMonth?'-'+form.startMonth:'');const end=form.endYear+(form.endMonth?'-'+form.endMonth:'');return form.isCurrent?start+' - hozir davom etyapti':start+' - '+end;}
+export function experienceDates(period){const years=String(period||'').match(/\d{4}/g)||[],dates=[...String(period||'').matchAll(/\b(\d{4})-(0[1-9]|1[0-2])\b/g)];return {startYear:years[0]||'',endYear:years[1]||'',startMonth:dates[0]?.[2]||'',endMonth:dates[1]?.[2]||'',isCurrent:years.length<2};}

@@ -1,3 +1,4 @@
+import {monthOptions,experiencePeriod,experienceDates} from '../lib/experiencePeriod';
 import CoverUpload from './CoverUpload';
 import {projectCoverItems} from '../lib/projectCovers';
 import EducationLinksEditor from './EducationLinksEditor';
@@ -779,7 +780,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
   const handleJobSubmit = async (e) => {
     e.preventDefault();
     if(uploadingCover)return;
-    const period = jobForm.isCurrent ? `${jobForm.startYear} - hozir davom etyapti` : `${jobForm.startYear} - ${jobForm.endYear}`;
+    const period = experiencePeriod(jobForm);
     const formData = new FormData();
     formData.append('role_uz', jobForm.role_uz);
     formData.append('role_ru', jobForm.role_ru);
@@ -2682,6 +2683,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 {/* Start Year */}
                 <div className="editor-input-group">
                   <label>{tr("Boshlanish yili","Start Year")}</label>
+                  <select aria-label={({UZ:'Boshlanish oyi',RU:'Месяц начала',ENG:'Start month',JP:'開始月'})[language]} value={jobForm.startMonth||''} onChange={event=>setJobForm(form=>({...form,startMonth:event.target.value}))}><option value="">{({UZ:'Oy · ixtiyoriy',RU:'Месяц · необязательно',ENG:'Month · optional',JP:'月・任意'})[language]}</option>{monthOptions(language).map(month=><option key={month.value} value={month.value}>{month.label}</option>)}</select>
                   <input 
                     type="number" 
                     min="1990" 
@@ -2696,6 +2698,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 {/* End Year */}
                 <div className="editor-input-group">
                   <label>{tr("Tugash yili","End Year")}</label>
+                  <select aria-label={({UZ:'Tugash oyi',RU:'Месяц окончания',ENG:'End month',JP:'終了月'})[language]} disabled={jobForm.isCurrent} value={jobForm.endMonth||''} onChange={event=>setJobForm(form=>({...form,endMonth:event.target.value}))}><option value="">{({UZ:'Oy · ixtiyoriy',RU:'Месяц · необязательно',ENG:'Month · optional',JP:'月・任意'})[language]}</option>{monthOptions(language).map(month=><option key={month.value} value={month.value}>{month.label}</option>)}</select>
                   <div className="end-year-toggle-wrap">
                     <input 
                       type="number" 
