@@ -1,3 +1,4 @@
+import AnimationDraftPreview from './AnimationDraftPreview';
 import {monthOptions,experiencePeriod,experienceDates} from '../lib/experiencePeriod';
 import CoverUpload from './CoverUpload';
 import {projectCoverItems} from '../lib/projectCovers';
@@ -2879,6 +2880,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 <label>{({UZ:'Kadr oralig‘i (ms) · kamroq = tezroq',RU:'Интервал кадров (мс) · меньше = быстрее',ENG:'Frame interval (ms) · lower = faster',JP:'フレーム間隔（ms）・小さいほど速い'})[language]}</label>
                 <input type="number" min="50" max="5000" step="10" value={jobForm.animationInterval||700} onChange={event=>setJobForm(form=>({...form,animationInterval:event.target.value}))}/>
               </div>
+              <AnimationDraftPreview frames={jobForm.animationFrames||[]} interval={jobForm.animationInterval} language={language}/>
               <div className="admin-modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => {
                   setShowJobModal(false);

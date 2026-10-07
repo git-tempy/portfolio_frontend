@@ -10,3 +10,4 @@
 .experience-process.experience-custom-frames{position:relative;animation:none;background:none;clip-path:none}
 .experience-custom-frames>img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;opacity:0}
 .experience-custom-frames>img.is-active{opacity:1}
+.animation-draft-preview{border:1px solid var(--admin-border,#333);border-radius:16px;padding:16px;margin:16px 0}.animation-draft-stage{display:flex;justify-content:center;align-items:center;min-height:220px;margin:12px 0;background:repeating-conic-gradient(#252525 0% 25%,#1d1d1d 0% 50%) 50%/20px 20px;border-radius:12px}.animation-draft-stage .experience-process{width:200px;flex-basis:200px;margin:0}.animation-draft-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.animation-draft-controls button{background:#292929;color:white;border:1px solid #555;border-radius:8px;padding:8px 14px;cursor:pointer}.animation-draft-controls span{color:#aaa;font-size:13px}
