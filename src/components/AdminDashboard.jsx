@@ -257,6 +257,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
   // Modal Overlays state
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [uploadingAnimation,setUploadingAnimation]=useState(false);
   const [savingCategory, setSavingCategory] = useState(false);
   const [categoryError, setCategoryError] = useState('');
   const [newCategoryNameUz, setNewCategoryNameUz] = useState('');
@@ -356,6 +357,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     company_ru: '',
     company_en: '',
     company_jp: '',
+    animationFrames: [], animationInterval: 700,
     startYear: new Date().getFullYear().toString(),
     endYear: new Date().getFullYear().toString(),
     isCurrent: false,
@@ -744,7 +746,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       company_ru: '',
       company_en: '',
       company_jp: '',
-      startYear: new Date().getFullYear().toString(),
+      animationFrames: [], animationInterval: 700,
+    startYear: new Date().getFullYear().toString(),
       endYear: new Date().getFullYear().toString(),
       isCurrent: false,
       desc_uz: '',
@@ -759,7 +762,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
   const handleEditJob = job => {
     const years=job.period?.match(/\d{4}/g)||[];
-    const form={startYear:years[0]||'',endYear:years[1]||'',isCurrent:years.length<2,logo:null,imageRemoved:false,logoName:''};
+    const form={...experienceDates(job.period),animationFrames:job.animation_frames||[],animationInterval:job.animation_interval||700,logo:null,imageRemoved:false,logoName:''};
     for(const field of ['role','company','desc']) for(const code of ['uz','ru','en','jp']) form[field+'_'+code]=job[field+'_'+code]||job[field]||'';
     setEditingJob(job);setJobForm(form);setShowJobModal(true);
   };
@@ -779,7 +782,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
   const handleJobSubmit = async (e) => {
     e.preventDefault();
-    if(uploadingCover)return;
+    if(uploadingCover||uploadingAnimation)return;
     const period = experiencePeriod(jobForm);
     const formData = new FormData();
     formData.append('role_uz', jobForm.role_uz);
@@ -798,6 +801,12 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     formData.append('desc_en', jobForm.desc_en);
     formData.append('desc_jp', jobForm.desc_jp);
     formData.append('desc', jobForm.desc_uz);
+    const frameFiles=[];
+    const frameOrder=(jobForm.animationFrames||[]).map(frame=>{if(frame.file)return {new:frameFiles.push(frame.file)-1};return {id:frame.id};});
+    formData.append('keep_frame_ids',JSON.stringify((jobForm.animationFrames||[]).filter(frame=>!frame.file).map(frame=>frame.id)));
+    formData.append('animation_order',JSON.stringify(frameOrder));
+    formData.append('animation_interval',String(jobForm.animationInterval||700));
+    frameFiles.forEach(file=>formData.append('animation_files',file));
     if (jobForm.logo) {
       formData.append('logo', jobForm.logo);
     } else if (jobForm.imageRemoved) formData.append('logo', '');
@@ -819,7 +828,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
           company_ru: '',
           company_en: '',
           company_jp: '',
-          startYear: new Date().getFullYear().toString(),
+          animationFrames: [], animationInterval: 700,
+    startYear: new Date().getFullYear().toString(),
           endYear: new Date().getFullYear().toString(),
           isCurrent: false,
           desc_uz: '',
@@ -2861,6 +2871,14 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               </div>
 
               {/* Action Buttons */}
+              <div className="editor-input-group upload-input-group">
+                <label>{({UZ:'Animatsiya kadrlari',RU:'Кадры анимации',ENG:'Animation frames',JP:'アニメーションのフレーム'})[language]}</label>
+                <CoverUpload kind="animation" chooseTitle={({UZ:'Kadr rasmlarini tanlash',RU:'Выбрать изображения кадров',ENG:'Choose frame images',JP:'フレーム画像を選択'})[language]} covers={jobForm.animationFrames||[]} language={language} onBusy={setUploadingAnimation} onChange={animationFrames=>setJobForm(form=>({...form,animationFrames}))}/>
+              </div>
+              <div className="editor-input-group">
+                <label>{({UZ:'Kadr oralig‘i (ms) · kamroq = tezroq',RU:'Интервал кадров (мс) · меньше = быстрее',ENG:'Frame interval (ms) · lower = faster',JP:'フレーム間隔（ms）・小さいほど速い'})[language]}</label>
+                <input type="number" min="50" max="5000" step="10" value={jobForm.animationInterval||700} onChange={event=>setJobForm(form=>({...form,animationInterval:event.target.value}))}/>
+              </div>
               <div className="admin-modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => {
                   setShowJobModal(false);
@@ -2873,7 +2891,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                     company_ru: '',
                     company_en: '',
                     company_jp: '',
-                    startYear: new Date().getFullYear().toString(),
+                    animationFrames: [], animationInterval: 700,
+    startYear: new Date().getFullYear().toString(),
                     endYear: new Date().getFullYear().toString(),
                     isCurrent: false,
                     desc_uz: '',
@@ -2886,7 +2905,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 }}>
                   {tr("Bekor qilish","Cancel")}
                 </button>
-                <button type="submit" className="submit-btn" disabled={uploadingCover}>
+                <button type="submit" className="submit-btn" disabled={uploadingCover||uploadingAnimation}>
                   {editingJob?tr("Saqlash","Save"):tr("Qo'shish","Add")}
                 </button>
               </div>
@@ -3032,7 +3051,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                 }}>
                   {tr("Bekor qilish","Cancel")}
                 </button>
-                <button type="submit" className="submit-btn" disabled={uploadingCover}>
+                <button type="submit" className="submit-btn" disabled={uploadingCover||uploadingAnimation}>
                   {editingEducation ? (tr("Saqlash","Save")) : (tr("Qo'shish","Add"))}
                 </button>
               </div>

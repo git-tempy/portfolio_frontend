@@ -9,7 +9,7 @@ export const clearAdminToken = () => {memoryToken=null;try{sessionStorage.remove
 async function prepareForm(form, headers) {
   const data = {};
   for (const [name, value] of form.entries()) {
-    let prepared = ['keep_image_ids','keep_cover_ids','cover_order'].includes(name) ? JSON.parse(value) : ((name === 'level'||['image','logo','cover_image'].includes(name)) && value === '') ? null : value;
+    let prepared = ['keep_image_ids','keep_cover_ids','cover_order','keep_frame_ids','animation_order'].includes(name) ? JSON.parse(value) : ((name === 'level'||['image','logo','cover_image'].includes(name)) && value === '') ? null : value;
     if (value instanceof File) {
       if (!value.size) continue;
       const response = await fetch(window.API_BASE_URL + '/api/uploads/presign/', {
@@ -22,7 +22,7 @@ async function prepareForm(form, headers) {
       if (!result.ok) throw new Error('File upload failed. Please try again.');
       prepared = { upload: upload.receipt };
     }
-    if (['images','cover_images'].includes(name)) {
+    if (['images','cover_images','animation_files'].includes(name)) {
       (data[name] ||= []).push(prepared);
     } else {
       data[name] = prepared;
