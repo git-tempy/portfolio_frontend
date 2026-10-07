@@ -9,7 +9,7 @@ export const clearAdminToken = () => {memoryToken=null;try{sessionStorage.remove
 async function prepareForm(form, headers) {
   const data = {};
   for (const [name, value] of form.entries()) {
-    let prepared = ['keep_image_ids','keep_cover_ids'].includes(name) ? JSON.parse(value) : ((name === 'level'||['image','logo','cover_image'].includes(name)) && value === '') ? null : value;
+    let prepared = ['keep_image_ids','keep_cover_ids','cover_order'].includes(name) ? JSON.parse(value) : ((name === 'level'||['image','logo','cover_image'].includes(name)) && value === '') ? null : value;
     if (value instanceof File) {
       if (!value.size) continue;
       const response = await fetch(window.API_BASE_URL + '/api/uploads/presign/', {

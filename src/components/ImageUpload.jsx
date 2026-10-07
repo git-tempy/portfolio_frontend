@@ -14,12 +14,12 @@ function FilePreview({ file }) {
   },[file]);
   return <img src={url||undefined} alt={file.name}/>;
 }
-export default function ImageUpload({ value=[],onChange,onBusy,kind='gallery',language='ENG',existing=[],singleImage=false }) {
+export default function ImageUpload({ value=[],onChange,onBusy,kind='gallery',language='ENG',existing=[],singleImage=false,multipleImages=false }) {
   const input=useRef(null),controller=useRef(null),sequence=useRef(0),busyCallback=useRef(onBusy);
   useEffect(()=>{busyCallback.current=onBusy;},[onBusy]);
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[progress,setProgress]=useState(''),[report,setReport]=useState(null),[drag,setDrag]=useState(false);
   const [editing,setEditing]=useState(null);
-  const single=kind!=='gallery'||singleImage;
+  const single=(kind!=='gallery'&&!multipleImages)||singleImage;
   const actionLabels=({UZ:['Almashtirish','O‘chirish'],ENG:['Replace','Delete'],RU:['Заменить','Удалить'],JP:['変更','削除']})[language]||['Replace','Delete'];
   const orderLabels=({UZ:['Chapga surish','O‘ngga surish'],ENG:['Move left','Move right'],RU:['Сдвинуть влево','Сдвинуть вправо'],JP:['左へ移動','右へ移動']})[language]||['Move left','Move right'];
   const editLabel=({UZ:'Tahrirlash',ENG:'Edit',RU:'Редактировать',JP:'編集'})[language]||'Edit';
@@ -29,7 +29,7 @@ export default function ImageUpload({ value=[],onChange,onBusy,kind='gallery',la
     const chosen=Array.from(files||[]);
     if(!chosen.length)return;
     if(kind==='gallery'&&value.length+chosen.length>20){setError(tr("Bir yuklashda 20 tagacha rasm.","Choose up to 20 images per upload."));return;}
-    if(chosen.reduce((n,f)=>n+f.size,0)>150*1024*1024){setError(tr("Jami fayllar 150 MB dan kichik bo‘lishi kerak.","The selected files must total less than 150 MB."));return;}
+    if(kind==='gallery'&&chosen.reduce((n,f)=>n+f.size,0)>150*1024*1024){setError(tr("Jami fayllar 150 MB dan kichik bo‘lishi kerak.","The selected files must total less than 150 MB."));return;}
     controller.current?.abort();
     const run=++sequence.current, aborter=new AbortController();controller.current=aborter;
     setBusy(true);onBusy?.(true);setError('');setReport(null);
@@ -71,7 +71,7 @@ export default function ImageUpload({ value=[],onChange,onBusy,kind='gallery',la
   return <div className="image-upload">
     <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" multiple={!single} hidden onChange={e=>choose(e.target.files)}/>
     {(!single||(!value.length&&!existing.some(Boolean)))&&<div className={'image-dropzone '+(drag?'dragging':'')} onDragOver={e=>{e.preventDefault();if(!busy&&!editing)setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);if(!busy&&!editing)choose(e.dataTransfer.files);}}>
-      <button type="button" disabled={busy||!!editing} onClick={()=>input.current.click()}><Upload size={22}/><strong>{kind==='portrait'?(tr("Profil rasmini tanlash","Choose profile image")):kind==='icon'?(tr("Rasmni tanlash","Choose image")):single?(tr("Muqova tanlash","Choose cover")):(tr("Rasmlarni tanlash","Choose images"))}</strong><span>{tr("JPG, PNG, WebP · Avtomatik siqish","JPG, PNG, WebP · Automatically optimized")}</span></button>
+      <button type="button" disabled={busy||!!editing} onClick={()=>input.current.click()}><Upload size={22}/><strong>{kind==='portrait'?(tr("Profil rasmini tanlash","Choose profile image")):kind==='icon'?(tr("Rasmni tanlash","Choose image")):(single||kind==='cover')?(tr("Muqova tanlash","Choose cover")):(tr("Rasmlarni tanlash","Choose images"))}</strong><span>{tr("JPG, PNG, WebP · Avtomatik siqish","JPG, PNG, WebP · Automatically optimized")}</span></button>
     </div>}
     {editing&&<ImageEditor key={editing.file.name+'-'+editing.index} file={editing.file} kind={kind} language={language} onCancel={stopEdit} onApply={file=>{if(editing.batch){const completed=[...editing.completed,file],index=editing.index+1;if(index<editing.batch.length){setEditing({...editing,file:editing.batch[index],index,completed});return;}onChange(completed);}else {const next=single?[file]:value.map((item,i)=>i===editing.index?file:item);onChange(next);}setReport(null);stopEdit();}}/>}
     {busy&&<div className="upload-progress" role="status"><span>{progress}</span><button type="button" onClick={()=>controller.current?.abort()}>{tr("Bekor qilish","Cancel")}</button></div>}

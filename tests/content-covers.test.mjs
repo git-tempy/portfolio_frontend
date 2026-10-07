@@ -8,4 +8,4 @@ test('concurrent consumers and language rerenders share one request; expiry and 
  cache.clear();await cache.get('/skills',load);assert.equal(calls,4);
 });
 test('failed requests can retry without poisoning cache',async()=>{const cache=createContentCache();await assert.rejects(cache.get('x',()=>Promise.reject(Error('offline'))));assert.equal(await cache.get('x',()=>42),42);});
-test('legacy, empty, duplicate and ordered multi-cover projects',()=>{assert.deepEqual(projectCoverImages({}),[]);assert.deepEqual(projectCoverImages({cover_image:'a'}),['a']);assert.deepEqual(projectCoverImages({cover_image:'a',covers:[{image:'b'},{image:'a'},{image:'c'}]}),['a','b','c']);assert.deepEqual(projectCoverImages({covers:[{image:'c'},{image:'b'}]}),['c','b']);});
+test('legacy, empty, duplicate and ordered multi-cover projects',()=>{assert.deepEqual(projectCoverImages({}),[]);assert.deepEqual(projectCoverImages({cover_image:'a'}),['a']);assert.deepEqual(projectCoverImages({cover_image:'a',covers:[{image:'b'},{image:'a'},{image:'c'}]}),['b','a','c']);assert.deepEqual(projectCoverImages({covers:[{image:'c'},{image:'b'}]}),['c','b']);});
