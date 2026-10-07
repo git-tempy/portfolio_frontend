@@ -1,3 +1,4 @@
+import SkillImage from './SkillImage';
 import Services from './Services';
 import { useState } from 'react';
 import { ArrowUpRight, GraduationCap, Plus, Minus, Award, Briefcase, Users, Target, ScanSearch, Brain, Lightbulb, Clock, ListChecks, Coffee, Headphones } from 'lucide-react';
@@ -50,7 +51,7 @@ export function SkillsSection({ language }) {
   const state=useContent('/api/skills/',language), traitsState=useContent('/api/traits/',language);
   const items=Array.isArray(state.data)?state.data:[],traits=Array.isArray(traitsState.data)?traitsState.data:[];
   const t=(locales[language]||locales.ENG).skills;
-  const skillGroup = type => items.some(s=>s.type===type)&&<div className="skills-group">{type==='Personal'&&<SubsectionTitle index="03.1" label={t.personal}/>}<div className={type==='Software'?'tool-grid':'personal-grid'}>{items.filter(s=>s.type===type).map((s,i)=><Reveal className="tool-card glass" key={s.id} scale={type==='Software'?.9:1} y={type==='Software'?0:20} duration={.4} delay={i*(type==='Software'?.05:.06)}><span className={'tool-symbol tool-color-'+i%6}>{s.image?<img src={s.image} alt="" loading="lazy"/>:type==='Personal'?['✦','◎','◈','✱'][i%4]:s.name.toLowerCase().includes('photoshop')?'Ps':s.name.toLowerCase().includes('illustrator')?'Ai':s.name.toLowerCase().includes('framer')?'Fr':s.name.slice(0,1)}</span><span>{localized(s,'name',language)}</span></Reveal>)}</div></div>;
+  const skillGroup = type => items.some(s=>s.type===type)&&<div className="skills-group">{type==='Personal'&&<SubsectionTitle index="03.1" label={t.personal}/>}<div className={type==='Software'?'tool-grid':'personal-grid'}>{items.filter(s=>s.type===type).map((s,i)=><Reveal className="tool-card glass" key={s.id} scale={type==='Software'?.9:1} y={type==='Software'?0:20} duration={.4} delay={i*(type==='Software'?.05:.06)}><span className={'tool-symbol tool-color-'+i%6}>{s.image?<SkillImage key={s.image} src={s.image} name={s.name_en||s.name}/>:type==='Personal'?['✦','◎','◈','✱'][i%4]:s.name.toLowerCase().includes('photoshop')?'Ps':s.name.toLowerCase().includes('illustrator')?'Ai':s.name.toLowerCase().includes('framer')?'Fr':s.name.slice(0,1)}</span><span>{localized(s,'name',language)}</span></Reveal>)}</div></div>;
   return <section className="section" id="skills"><div className="container">
     <SectionTitle index="03" label={t.title} title={t.software}/>
     <ContentState state={state} language={language} empty={!items.length}/>

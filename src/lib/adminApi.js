@@ -1,3 +1,4 @@
+import { invalidateContent } from './content';
 import { localAdminRequest } from './localPreview';
 const TOKEN_KEY = 'desone-admin-session';
 let memoryToken=null;
@@ -8,7 +9,7 @@ export const clearAdminToken = () => {memoryToken=null;try{sessionStorage.remove
 async function prepareForm(form, headers) {
   const data = {};
   for (const [name, value] of form.entries()) {
-    let prepared = name === 'keep_image_ids' ? JSON.parse(value) : ((name === 'level'||['image','logo','cover_image'].includes(name)) && value === '') ? null : value;
+    let prepared = ['keep_image_ids','keep_cover_ids'].includes(name) ? JSON.parse(value) : ((name === 'level'||['image','logo','cover_image'].includes(name)) && value === '') ? null : value;
     if (value instanceof File) {
       if (!value.size) continue;
       const response = await fetch(window.API_BASE_URL + '/api/uploads/presign/', {
@@ -21,8 +22,8 @@ async function prepareForm(form, headers) {
       if (!result.ok) throw new Error('File upload failed. Please try again.');
       prepared = { upload: upload.receipt };
     }
-    if (name === 'images') {
-      (data.images ||= []).push(prepared);
+    if (['images','cover_images'].includes(name)) {
+      (data[name] ||= []).push(prepared);
     } else {
       data[name] = prepared;
     }
@@ -56,5 +57,6 @@ export async function adminFetch(url, options = {}) {
     window.dispatchEvent(new CustomEvent('admin-request-error',{detail:message}));
     if (!options.method || options.method==='GET') throw new Error(message);
   }
+  if(response.ok && options.method && options.method!=='GET')invalidateContent();
   return response;
 }

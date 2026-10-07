@@ -580,6 +580,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       fileName: '',
       coverImage: null,
       coverImageName: '',
+      keptCovers: [], coverFiles: [],
       description_uz: '',
       description_ru: '',
       description_en: '',
@@ -606,6 +607,7 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       fileRemoved: false,
       coverImage: null,
       coverImageName: proj.cover_image ? proj.cover_image.split('/').pop() : '',
+      keptCovers: proj.covers || [], coverFiles: [],
       description_uz: proj.description_uz || proj.description || '',
       description_ru: proj.description_ru || '',
       description_en: proj.description_en || '',
@@ -669,6 +671,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     } else if (projectForm.file) {
       formData.append('file', projectForm.file);
     } else if (projectForm.fileRemoved) formData.append('file', '');
+    formData.append('keep_cover_ids', JSON.stringify((projectForm.keptCovers||[]).map(item=>item.id)));
+    (projectForm.coverFiles||[]).forEach(file=>formData.append('cover_images',file));
     if (projectForm.coverImage) {
       formData.append('cover_image', projectForm.coverImage);
     } else if (projectForm.imageRemoved) formData.append('cover_image', '');
@@ -2341,6 +2345,11 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               <div className="editor-input-group upload-input-group">
                 <label>{tr("Loyiha muqovasi","Cover image")}</label>
                 <ImageUpload kind="cover" language={language} value={projectForm.coverImage?[projectForm.coverImage]:[]} existing={[projectForm.imageRemoved?null:editingProject?.cover_image]} onBusy={setUploadingCover} onChange={files=>setProjectForm(p=>({...p,coverImage:files[0]||null,imageRemoved:!files.length,coverImageName:files[0]?.name||''}))}/>
+              </div>
+              <div className="editor-input-group upload-input-group">
+                <label>{({UZ:'Qo‘shimcha muqovalar · 8 tagacha',RU:'Дополнительные обложки · до 8',ENG:'Additional covers · up to 8',JP:'追加カバー・最大8枚'})[language]}</label>
+                <ImageUpload value={projectForm.coverFiles||[]} language={language} onBusy={setUploadingCover} onChange={files=>setProjectForm(form=>({...form,coverFiles:files}))}/>
+                <div className="upload-previews existing-project-gallery">{(projectForm.keptCovers||[]).map((cover,index)=><div className="existing-project-image" key={cover.id}><div className="gallery-order-actions"><button type="button" disabled={index===0} onClick={()=>setProjectForm(form=>{const keptCovers=[...form.keptCovers];[keptCovers[index-1],keptCovers[index]]=[keptCovers[index],keptCovers[index-1]];return {...form,keptCovers};})}>←</button><button type="button" disabled={index===(projectForm.keptCovers||[]).length-1} onClick={()=>setProjectForm(form=>{const keptCovers=[...form.keptCovers];[keptCovers[index+1],keptCovers[index]]=[keptCovers[index],keptCovers[index+1]];return {...form,keptCovers};})}>→</button></div><ImageUpload singleImage kind="cover" language={language} existing={[cover.image]} onBusy={setUploadingCover} onChange={files=>setProjectForm(form=>({...form,keptCovers:form.keptCovers.filter(item=>item.id!==cover.id),coverFiles:[...(form.coverFiles||[]),...files]}))}/></div>)}</div>
               </div>
               {projectError && <p className="upload-error" role="alert">{projectError}</p>}
 
