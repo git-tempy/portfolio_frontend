@@ -76,7 +76,7 @@ h1,h2,h3{font-weight:700;letter-spacing:-.02em}
 .skills-group+.skills-group{margin-top:64px}.personal-grid{gap:16px}.personal-grid .tool-card{aspect-ratio:auto;padding:24px;gap:16px;font-size:16px}.personal-grid .tool-symbol{width:48px;height:48px;border-radius:12px;font-size:22px;background:#d4ff3a22;color:#d4ff3a}
 .personal-grid .tool-color-1{background:#3b82f622;color:#3b82f6}.personal-grid .tool-color-2{background:#f9731622;color:#f97316}.personal-grid .tool-color-3{background:#a855f722;color:#a855f7}
 .traits-grid{gap:24px;margin-top:80px}.traits-grid .subheading{font-size:20px;color:var(--primary-lime);margin-bottom:16px}.traits-grid>div:nth-child(2) .subheading{color:var(--accent-blue)}.trait-row{padding:16px 24px;margin-top:12px;gap:12px;color:var(--text-primary);font-size:14px}.trait-row>.accent{font-size:24px}
-.journey{position:relative;gap:32px}.journey::before{content:'';position:absolute;left:50%;top:8px;bottom:8px;width:1px;background:linear-gradient(var(--primary-lime),var(--border),transparent);opacity:.4}
+.journey{position:relative;gap:32px}.journey::before{content:'';position:absolute;left:50%;top:8px;bottom:8px;width:2px;background:var(--primary-lime);opacity:.72;transform:translateX(-50%)}
 .journey-row{position:relative;display:block;width:50%;margin-left:50%;padding-left:48px}
 .journey-row:nth-child(even){margin-left:0;padding-left:0;padding-right:48px}
 .journey-marker{position:absolute;left:-20px;top:8px;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--primary-lime);color:var(--accent-ink);box-shadow:0 0 0 4px var(--bg-color)}
@@ -135,7 +135,7 @@ h1,h2,h3{font-weight:700;letter-spacing:-.02em}
 [data-theme=light] .personal-grid .tool-color-1{background:#e4edf8;color:#365f91}
 [data-theme=light] .personal-grid .tool-color-2{background:#f8eadf;color:#905127}
 [data-theme=light] .personal-grid .tool-color-3{background:#eee7f7;color:#704a9d}
-[data-theme=light] .journey::before{background:linear-gradient(#7e9e59,#cbd7c2,transparent);opacity:1}
+[data-theme=light] .journey::before{background:#658b34;opacity:1}
 [data-theme=light] .work-cover{background:linear-gradient(135deg,#edf1e8,#e7eef0)}
 [data-theme=light] .work-open{background:#fffffff2;color:#253e17;border-color:#d6e0cc}
 [data-theme=light] .work-type{background:#fffffff2;color:#35452b;box-shadow:0 2px 10px #0000000d}
