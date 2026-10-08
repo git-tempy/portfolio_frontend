@@ -348,6 +348,8 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
 
   // Job Modal states
   const [showJobModal, setShowJobModal] = useState(false);
+  const [jobOrderBusy,setJobOrderBusy]=useState(false);
+  const [jobOrderError,setJobOrderError]=useState('');
   const [editingJob,setEditingJob]=useState(null);
   const [jobForm, setJobForm] = useState({
     role_uz: '',
@@ -766,6 +768,20 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     const form={...experienceDates(job.period),animationFrames:job.animation_frames||[],animationInterval:job.animation_interval||700,logo:null,imageRemoved:false,logoName:''};
     for(const field of ['role','company','desc']) for(const code of ['uz','ru','en','jp']) form[field+'_'+code]=job[field+'_'+code]||job[field]||'';
     setEditingJob(job);setJobForm(form);setShowJobModal(true);
+  };
+
+  const moveJob = async (index,direction) => {
+    if(jobOrderBusy)return;
+    const next=[...jobs],target=index+direction;
+    if(target<0||target>=next.length)return;
+    [next[index],next[target]]=[next[target],next[index]];
+    setJobOrderBusy(true);setJobOrderError('');
+    try {
+      const response=await adminFetch(window.API_BASE_URL+'/api/experiences/order/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:next.map(job=>job.id)})});
+      if(!response.ok)throw Error();
+      setJobs(await response.json());
+    } catch {setJobOrderError(({UZ:'Tartib saqlanmadi. Sahifani yangilab qayta urinib ko‘ring.',RU:'Порядок не сохранён. Обновите страницу и попробуйте снова.',ENG:'Order was not saved. Reload and try again.',JP:'順序を保存できませんでした。再読み込みしてお試しください。'})[language]);}
+    finally {setJobOrderBusy(false);}
   };
 
   const handleDeleteJob = async (id) => {
@@ -1954,12 +1970,14 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
             <div className="experience-tab-content glass-panel">
               <div className="panel-toolbar-header">
                 <h3>{tr("Ish tajribasi bo'limi","Work Experience")}</h3>
-                <button className="add-item-btn" onClick={handleAddJob}>
+                <button className="add-item-btn" disabled={jobOrderBusy} onClick={handleAddJob}>
                   <Plus size={16} />
                   <span>{tr("Yangi tajriba qo'shish","Add Work Experience")}</span>
                 </button>
               </div>
 
+              {jobOrderBusy&&<p role="status">{({UZ:"Saqlanmoqda…",RU:"Сохранение…",ENG:"Saving…",JP:"保存中…"})[language]}</p>}
+              {jobOrderError&&<p role="alert">{jobOrderError}</p>}
               <div className="dashboard-table-wrapper">
                 <table className="dashboard-table">
                   <thead>
@@ -1979,13 +1997,15 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
                         <td className="col-cat">{job.company}</td>
                         <td className="col-type">{job.period}</td>
                         <td className="col-actions">
-                          <button className="action-icon-btn edit-btn" title={tr("Tahrirlash","Edit")} onClick={()=>handleEditJob(job)}>
+                          <button className="action-icon-btn" disabled={jobOrderBusy||idx===0} aria-label={({UZ:'Yuqoriga',RU:'Переместить вверх',ENG:'Move up',JP:'上へ移動'})[language]} title={({UZ:'Yuqoriga',RU:'Переместить вверх',ENG:'Move up',JP:'上へ移動'})[language]} onClick={()=>moveJob(idx,-1)}>↑</button>
+                          <button className="action-icon-btn" disabled={jobOrderBusy||idx===jobs.length-1} aria-label={({UZ:'Pastga',RU:'Переместить вниз',ENG:'Move down',JP:'下へ移動'})[language]} title={({UZ:'Pastga',RU:'Переместить вниз',ENG:'Move down',JP:'下へ移動'})[language]} onClick={()=>moveJob(idx,1)}>↓</button>
+                          <button className="action-icon-btn edit-btn" disabled={jobOrderBusy} title={tr("Tahrirlash","Edit")} onClick={()=>handleEditJob(job)}>
                             <Edit2 size={14} />
                           </button>
                           <button 
                             className="action-icon-btn delete-btn" 
                             title={tr("O‘chirish","Delete")}
-                            onClick={() => handleDeleteJob(job.id)}
+                            disabled={jobOrderBusy} onClick={() => handleDeleteJob(job.id)}
                           >
                             <Trash2 size={14} />
                           </button>
