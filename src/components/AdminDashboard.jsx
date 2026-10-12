@@ -1,4 +1,5 @@
 import AnimationDraftPreview from './AnimationDraftPreview';
+import {resumeField,resumeUrl} from '../lib/resume';
 import {monthOptions,experiencePeriod,experienceDates} from '../lib/experiencePeriod';
 import CoverUpload from './CoverUpload';
 import {projectCoverItems} from '../lib/projectCovers';
@@ -252,8 +253,9 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     document.addEventListener('keydown',keydown);
     return()=>{document.removeEventListener('keydown',keydown);document.body.style.overflow=oldOverflow;previous?.focus();};
   },[mobileSidebarOpen]);
-  const [selectedResumeFile, setSelectedResumeFile] = useState(null);
-  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [selectedResumeFile, setSelectedResumeFile] = useState({});
+  const [resumeUploadErrors,setResumeUploadErrors] = useState({});
+  const [isUploadingResume, setIsUploadingResume] = useState({});
 
   // Modal Overlays state
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -492,18 +494,19 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
     }
   };
 
-  const handleResumeFileChange = (e) => {
+  const handleResumeFileChange = (e,code) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedResumeFile(e.target.files[0]);
+      setSelectedResumeFile(files=>({...files,[code]:e.target.files[0]}));
     }
   };
 
-  const handleResumeUploadSubmit = async () => {
-    if (!selectedResumeFile) return;
-    setIsUploadingResume(true);
+  const handleResumeUploadSubmit = async (code) => {
+    if (!selectedResumeFile[code]) return;
+    setIsUploadingResume(busy=>({...busy,[code]:true}));
+    setResumeUploadErrors(errors=>({...errors,[code]:null}));
     
     const formData = new FormData();
-    formData.append('resume_pdf', selectedResumeFile);
+    formData.append(resumeField(code), selectedResumeFile[code]);
     
     try {
       const res = await adminFetch(window.API_BASE_URL + '/api/about/', {
@@ -513,18 +516,18 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
       
       if (res.ok) {
         alert(tr("Rezyume muvaffaqiyatli yuklandi!","Resume uploaded successfully!"));
-        setSelectedResumeFile(null);
+        setSelectedResumeFile(files=>({...files,[code]:null}));
         if (onAboutUpdate) {
           onAboutUpdate();
         }
       } else {
-        alert(tr("Yuklashda xatolik yuz berdi.","Failed to upload resume."));
+        setResumeUploadErrors(errors=>({...errors,[code]:tr("Yuklashda xatolik yuz berdi.","Failed to upload resume.")}));
       }
     } catch (err) {
       console.error(err);
-      alert(tr("Tarmoq xatoligi yuz berdi.","Network error occurred."));
+      setResumeUploadErrors(errors=>({...errors,[code]:tr("Tarmoq xatoligi yuz berdi.","Network error occurred.")}));
     } finally {
-      setIsUploadingResume(false);
+      setIsUploadingResume(busy=>({...busy,[code]:false}));
     }
   };
 
@@ -2027,58 +2030,21 @@ export default function AdminDashboard({ language, setLanguage, theme, toggleThe
               <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-heading)' }}>
                   <FileText size={18} style={{ color: 'var(--primary-lime)' }} />
-                  <span>{tr("Asosiy Rezyume (PDF) yuklash","Upload r\u00e9sum\u00e9 PDF")}</span>
+                  <span>{({UZ:'Til bo‘yicha CV (PDF)',RU:'Резюме по языкам (PDF)',ENG:'CV by language (PDF)',JP:'言語別の履歴書 (PDF)'})[language]}</span>
                 </h4>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '1.25rem', lineHeight: '1.5' }}>
-                  Ushbu PDF fayl portfolio asosiy sahifasidagi "Resume" tugmasi bosilganda ochiladi va foydalanuvchilar tomonidan yuklab olinadi.
+                  {({UZ:'Har bir til uchun alohida PDF yuklang. Til fayli bo‘lmasa eski umumiy CV ishlatiladi.',RU:'Загрузите отдельный PDF для каждого языка. Если его нет, используется прежнее общее резюме.',ENG:'Upload a separate PDF for each language. The shared CV is used if a language file is missing.',JP:'言語ごとにPDFをアップロードします。未登録の言語には従来の共通履歴書を使用します。'})[language]}
                 </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                  <input 
-                    type="file" 
-                    accept=".pdf" 
-                    id="resume-pdf-upload-input"
-                    style={{ display: 'none' }}
-                    onChange={handleResumeFileChange}
-                  />
-                  <button 
-                    className="add-item-btn"
-                    onClick={() => document.getElementById('resume-pdf-upload-input').click()}
-                    style={{ padding: '0.6rem 1.25rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                    disabled={isUploadingResume}
-                  >
-                    <Upload size={14} />
-                    <span>{tr("Faylni tanlash","Choose file")}</span>
-                  </button>
-                  {selectedResumeFile && (
-                    <span style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontFamily: 'monospace' }}>
-                      {selectedResumeFile.name}
-                    </span>
-                  )}
-                  {selectedResumeFile && (
-                    <button 
-                      className="add-item-btn"
-                      onClick={handleResumeUploadSubmit}
-                      style={{ padding: '0.6rem 1.25rem', fontSize: '0.8rem', background: 'var(--primary-lime)', color: '#000000' }}
-                      disabled={isUploadingResume}
-                    >
-                      {isUploadingResume ? 'Yuklanmoqda...' : 'Yuklashni boshlash'}
-                    </button>
-                  )}
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:'1rem'}}>
+                  {['UZ','RU','ENG','JP'].map(code=><div key={code} style={{padding:'1rem',border:'1px solid var(--border)',borderRadius:'12px',minWidth:0}}>
+                    <h4>{code==='ENG'?'EN':code} · CV (PDF)</h4>
+                    <input type="file" accept=".pdf" id={'resume-pdf-upload-'+code} style={{display:'none'}} disabled={Boolean(isUploadingResume[code])} onChange={e=>handleResumeFileChange(e,code)}/>
+                    <button className="add-item-btn" disabled={Boolean(isUploadingResume[code])} onClick={()=>document.getElementById('resume-pdf-upload-'+code).click()}><Upload size={14}/>{tr('Faylni tanlash','Choose file')}</button>
+                    {selectedResumeFile[code]&&<><p style={{overflowWrap:'anywhere'}}>{selectedResumeFile[code].name}</p><button className="add-item-btn" disabled={Boolean(isUploadingResume[code])} onClick={()=>handleResumeUploadSubmit(code)}>{isUploadingResume[code]?tr('Yuklanmoqda…','Uploading…'):tr('Yuklash','Upload')}</button></>}
+                    {resumeUrl(dbAbout,code)&&<p><a href={resumeUrl(dbAbout,code)} target="_blank" rel="noopener noreferrer">{tr('Hozirgi CV','Current CV')}{!dbAbout?.[resumeField(code)]?' · '+tr('Umumiy','Shared'):''}</a></p>}
+                    {resumeUploadErrors[code]&&<p role="alert">{resumeUploadErrors[code]}</p>}
+                  </div>)}
                 </div>
-                {/* Display Current Resume Link if exists */}
-                {dbAbout?.resume_pdf && (
-                  <div style={{ marginTop: '1rem', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ color: 'var(--text-secondary)' }}>{tr("Hozirgi yuklangan rezyume:","Current r\u00e9sum\u00e9:")}</span>
-                    <a 
-                      href={dbAbout.resume_pdf} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      style={{ color: 'var(--primary-lime)', textDecoration: 'underline', fontWeight: '600' }}
-                    >
-                      {tr("Rezyumeni ko‘rish","View résumé")}
-                    </a>
-                  </div>
-                )}
               </div>
 
               <div className="dashboard-table-wrapper">
