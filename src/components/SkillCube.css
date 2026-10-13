@@ -2,6 +2,7 @@
 .skill-cube-perspective{position:absolute;inset:0;perspective:1400px}
 .skill-cube-orbit,.skill-cube-tilt,.skill-cube-layer,.skill-cubie{position:absolute;left:50%;top:50%;transform-style:preserve-3d;width:0;height:0}
 .skill-cube-orbit{animation:cube-orbit 50s linear infinite}
+.skill-cube-scene[data-motion-active=false] .skill-cube-orbit,.skill-cube-scene[data-motion-active=false] .skill-cube-layer{animation-play-state:paused}
 .skill-cube-tilt{transform:rotateX(-24deg) rotateZ(-8deg)}
 .skill-cube-layer{transform:translateY(calc(var(--layer-y)*var(--pitch)));animation:cube-slice 21s cubic-bezier(.45,0,.35,1) infinite}
 .skill-cube-layer--1{animation-delay:-7s}.skill-cube-layer--2{animation-delay:-14s}

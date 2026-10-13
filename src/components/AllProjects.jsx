@@ -1,4 +1,5 @@
 import { matchesCategory } from '../lib/projectCategories';
+import { orderProjects } from '../lib/projectOrder';
 import {textFor} from '../lib/uiText';
 import { useState } from 'react';
 import { ArrowLeft, Search } from 'lucide-react';
@@ -16,7 +17,7 @@ export default function AllProjects({ language, initialSearch = '', initialTag =
   const categoryState = useContent('/api/portfolio/categories/', language);
   const categories = Array.isArray(categoryState.data) ? categoryState.data : [];
   const selectedCategory = categories.find(c => String(c.id) === category);
-  const projects = Array.isArray(state.data) ? state.data : [];
+  const projects = orderProjects(Array.isArray(state.data) ? state.data : []);
   const filtered = projects.filter(p => (!initialTag || hasProjectTag(p,initialTag)) && matchesCategory(p, selectedCategory) && [localized(p,'title',language),localized(p,'description',language),p.main_hashtag,p.regular_hashtags].join(' ').toLowerCase().includes(search.toLowerCase()));
   return <section className="section catalog"><div className="container"><button className="text-button" onClick={onBack}><ArrowLeft size={18}/>{textFor(language).home}</button><div className="section-heading"><div><span className="eyebrow">DESONE / {textFor(language).work}</span><h1>{heading}<span className="accent">.</span></h1></div><span className="muted">{filtered.length} {textFor(language).projects}</span></div>
   <div className="catalog-controls"><label className="search-box"><Search size={19}/><input aria-label={textFor(language).search} placeholder={textFor(language).search} value={search} onChange={e => { setSearch(e.target.value); setLimit(12); }}/></label><div className="filter-list" aria-label={textFor(language).all}>{[null,...categories].map(c => <button key={c?.id ?? 'all'} aria-pressed={c ? category === String(c.id) : !selectedCategory} onClick={() => {setCategory(c ? String(c.id) : '');setLimit(12);}}>{c ? categoryLabel(localized(c,'name',language)) : textFor(language).all}</button>)}</div></div>

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useVisibleMotion } from '../lib/visibleMotion';
 import { useContent } from '../lib/content';
 import './SkillCube.css';
 
@@ -17,14 +18,16 @@ function Mark({ tool }) {
 }
 const faces = ['front','back','right','left','top','bottom'];
 function CubeScene() {
+  const sceneRef = useRef(null);
   const { data } = useContent('/api/skills/');
   const tools = (Array.isArray(data) ? data : []).filter(s=>s.type==='Software').map(skill=>{
     const brand=brands.find(item=>item.match.test(skill.name));
     // Hero marks stay crisp and independent of uploaded skill-card artwork.
     return {key:brand?.key||String(skill.id),label:brand?.label||skill.name.slice(0,2),color:brand?.color||'#ccff33'};
   });
+  const animate = useVisibleMotion(sceneRef,tools.length>0);
   if (!tools.length) return null;
-  return <div className="skill-cube-scene" aria-hidden="true">
+  return <div className="skill-cube-scene" ref={sceneRef} data-motion-active={animate} aria-hidden="true">
     <div className="skill-cube-halo"/><div className="skill-cube-shadow"/>
     <div className="skill-cube-perspective"><div className="skill-cube-orbit"><div className="skill-cube-tilt">
       {[-1,0,1].map((y,layer)=><div className={'skill-cube-layer skill-cube-layer--'+layer} key={y} style={{'--layer-y':y}}>
