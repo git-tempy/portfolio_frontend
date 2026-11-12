@@ -14,8 +14,7 @@ async function fallback(file,kind,signal) {
     if(signal?.aborted)throw new DOMException('Cancelled','AbortError');
     canvas.getContext('2d').drawImage(bitmap,0,0,width,height);
     let blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.85));
-    if(!blob)throw new Error('This browser could not optimize the image.');
-    if(blob.size>=file.size&&width===bitmap.width&&height===bitmap.height)blob=file;
+    if(!blob||blob.type!=='image/webp')throw new Error('This browser cannot create WebP images. Please use a newer browser.');
     return {blob,width,height,originalSize:file.size};
   }finally{bitmap.close();}
 }
@@ -37,6 +36,6 @@ export async function optimizeImage(file,kind,signal) {
     });
   } else result=await fallback(file,kind,signal);
   if(signal?.aborted)throw new DOMException('Cancelled','AbortError');
-  const extension=result.blob.type==='image/webp'?'.webp':file.name.match(/\.[^.]+$/)?.[0]||'.png';
-  return {...result,file:new File([result.blob],file.name.replace(/\.[^.]+$/,'')+extension,{type:result.blob.type,lastModified:file.lastModified})};
+  if(result.blob.type!=='image/webp')throw new Error('Image conversion did not produce WebP.');
+  return {...result,file:new File([result.blob],file.name.replace(/\.[^.]+$/,'')+'.webp',{type:'image/webp',lastModified:file.lastModified})};
 }

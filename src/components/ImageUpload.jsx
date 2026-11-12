@@ -4,6 +4,7 @@ import { optimizeImage } from '../lib/optimizeImage';
 import './ImageUpload.css';
 import ImageEditor from './ImageEditor';
 import { adminText } from '../lib/adminTranslations';
+import { adminFetch } from '../lib/adminApi';
 const bytes=n=>n<1024*1024?Math.round(n/1024)+' KB':(n/1024/1024).toFixed(1)+' MB';
 function FilePreview({ file }) {
   const [url,setUrl]=useState('');
@@ -56,7 +57,9 @@ export default function ImageUpload({ value=[],onChange,onBusy,kind='gallery',la
       const previewOrigin=import.meta.env.DEV&&import.meta.env.VITE_PREVIEW_MEDIA_ORIGIN;
       const storageSource=source.protocol==='https:'&&source.hostname==='br-cold-sun-b1ney4xj.storage.c-5.eu-central-1.aws.neon.tech'&&source.pathname.startsWith('/portfolio-media/uploads/');
       const mediaUrl=previewOrigin&&source.origin===previewOrigin?'/__preview-media'+source.pathname+source.search:storageSource&&!import.meta.env.DEV?'/api/image-source?url='+encodeURIComponent(source.href):src;
-      const response=await fetch(mediaUrl,{signal:aborter.signal});
+      const response=await (source.pathname.startsWith('/api/media/image/')
+        ? adminFetch(mediaUrl,{signal:aborter.signal,remoteOnly:true})
+        : fetch(mediaUrl,{signal:aborter.signal}));
       if(!response.ok)throw new Error('Could not load image.');
       const blob=await response.blob();
       const suffix=source.protocol==='data:'?'webp':source.pathname.split('.').pop()?.toLowerCase();
